@@ -1,8 +1,11 @@
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { FiStar } from 'react-icons/fi';
+import { useGetCities } from '../hooks/api/cities';
 
 export default function Home() {
+  const cities = useGetCities();
+  console.log(cities.data);
   return (
     <StyledHome>
       <header className="header">
@@ -19,10 +22,9 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="today">{format(new Date(), 'EEE, d MMM')}</div>
-
-      <div className="current container">
-        <button className="current__location">View Current Location</button>
+      <div className="today">
+        <div className="time">{format(new Date(), 'h:mm b')}</div>
+        <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
       </div>
 
       <section className="container">
@@ -35,24 +37,17 @@ export default function Home() {
         </div>
 
         <div className="locations">
-          <div className="location">
-            <h3>New York</h3>
-            <p>
-              <span className="value">84</span>
-              &#186;
-              <span>C</span>
-            </p>
-            <p className="summary">Sunny</p>
-          </div>
-
-          <div className="location">
-            <h3>Monaco</h3>
-            <p className="temp">
-              <span className="value">84</span>
-              &#186;<span>C</span>
-            </p>
-            <p className="summary">Sunny</p>
-          </div>
+          {cities.data?.data.map(city => (
+            <div className="location">
+              <h3>{city.name}</h3>
+              <p className="temp">
+                <span className="value">84</span>
+                &#186;
+                <span>C</span>
+              </p>
+              <p className="summary">Sunny</p>
+            </div>
+          ))}
         </div>
       </section>
     </StyledHome>
@@ -108,15 +103,22 @@ const StyledHome = styled.section`
   }
 
   .today {
+    font-family: 'Roboto';
     font-size: 1.9rem;
     text-align: center;
     font-weight: 500;
     padding: 1.5rem;
+
+    .day {
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+    }
   }
 
   .current {
     text-align: center;
-    margin-top: 3.5rem;
+    margin-top: 2.5rem;
 
     .current__location {
       background: #1e213a;
@@ -132,7 +134,7 @@ const StyledHome = styled.section`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 2rem;
+    margin-top: 3rem;
     margin-bottom: 2rem;
 
     h2 {
@@ -161,21 +163,26 @@ const StyledHome = styled.section`
   .locations {
     display: grid;
     gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
   }
 
   .location {
+    display: flex;
+    flex-direction: column;
     background: #1e213a;
     color: #e7e7eb;
     border-radius: 4px;
     padding: 1rem;
     text-align: center;
+    border: 1px solid rebeccapurple;
     box-shadow: 0px 6px 10px 0px hsla(0, 0%, 0%, 0.14),
       0px 1px 18px 0px hsla(0, 0%, 0%, 0.12), 0px 3px 5px -1px hsla(0, 0%, 0%, 0.2);
 
     h3 {
       margin-top: 0.7rem;
-      margin-bottom: 0;
+      margin-bottom: 1rem;
       font-size: 1.4rem;
+      font-weight: 500;
     }
 
     .value {
@@ -186,13 +193,14 @@ const StyledHome = styled.section`
     .temp {
       font-size: 1.4rem;
       font-weight: 500;
-      margin-top: 0.5rem;
+      margin-top: auto;
       margin-bottom: 0;
     }
 
     .summary {
       font-size: 0.8rem;
       font-weight: 500;
+      margin-bottom: 0.5rem;
     }
   }
 `;
