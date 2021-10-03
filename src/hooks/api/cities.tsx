@@ -13,7 +13,7 @@ export function useGetCities() {
         params: {
           includeDeleted: 'NONE',
           distanceUnit: 'MI',
-          limit: 50,
+          limit: 15,
           sort: '-population',
         },
       }),

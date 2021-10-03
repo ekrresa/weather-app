@@ -2,10 +2,28 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { FiStar } from 'react-icons/fi';
 import { useGetCities } from '../hooks/api/cities';
+import { extractCoordinates } from '../helpers';
+import { useEffect, useState } from 'react';
+import { useGetCityWeather } from '../hooks/api/weather';
 
 export default function Home() {
+  const [locations, setLocations] = useState<any[]>([]);
   const cities = useGetCities();
-  console.log(cities.data);
+  const weather = useGetCityWeather(locations);
+
+  console.log(weather);
+
+  useEffect(() => {
+    if (cities.data) {
+      const str = extractCoordinates(cities.data.data);
+      setLocations(str);
+    }
+  }, [cities.data]);
+
+  if (!cities.data) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <StyledHome>
       <header className="header">
@@ -37,15 +55,25 @@ export default function Home() {
         </div>
 
         <div className="locations">
-          {cities.data?.data.map(city => (
-            <div className="location">
+          {cities.data?.data.map((city, index) => (
+            <div className="location" key={city.id}>
               <h3>{city.name}</h3>
-              <p className="temp">
-                <span className="value">84</span>
-                &#186;
-                <span>C</span>
+
+              {weather[index]?.data ? (
+                <p className="temp">
+                  <span className="value">
+                    {weather[index].data?.current.temperature}
+                  </span>
+                  &#186;
+                  <span>C</span>
+                </p>
+              ) : (
+                <p className="temp">loading...</p>
+              )}
+
+              <p className="summary">
+                {weather[index]?.data?.current?.weather_descriptions[0]}
               </p>
-              <p className="summary">Sunny</p>
             </div>
           ))}
         </div>
@@ -164,9 +192,11 @@ const StyledHome = styled.section`
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+    padding-bottom: 4rem;
   }
 
   .location {
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     background: #1e213a;
@@ -177,6 +207,11 @@ const StyledHome = styled.section`
     border: 1px solid rebeccapurple;
     box-shadow: 0px 6px 10px 0px hsla(0, 0%, 0%, 0.14),
       0px 1px 18px 0px hsla(0, 0%, 0%, 0.12), 0px 3px 5px -1px hsla(0, 0%, 0%, 0.2);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
 
     h3 {
       margin-top: 0.7rem;
