@@ -1,17 +1,18 @@
-import styled from 'styled-components';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { FiStar } from 'react-icons/fi';
+import styled from 'styled-components';
+
 import { useGetCities } from '../hooks/api/cities';
 import { extractCoordinates } from '../helpers';
-import { useEffect, useState } from 'react';
 import { useGetCityWeather } from '../hooks/api/weather';
+import { Header } from '../components/Header';
 
 export default function Home() {
   const [locations, setLocations] = useState<any[]>([]);
   const cities = useGetCities();
   const weather = useGetCityWeather(locations);
-
-  console.log(weather);
 
   useEffect(() => {
     if (cities.data) {
@@ -26,19 +27,7 @@ export default function Home() {
 
   return (
     <StyledHome>
-      <header className="header">
-        <div className="container wrapper">
-          <div className="logo">WeatherView</div>
-          <div className="temperature">
-            <div className="celcius">
-              &#186;<span>C</span>
-            </div>
-            <div className="fahrenheit">
-              &#186;<span>F</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="today">
         <div className="time">{format(new Date(), 'h:mm b')}</div>
@@ -56,13 +45,17 @@ export default function Home() {
 
         <div className="locations">
           {cities.data?.data.map((city, index) => (
-            <div className="location" key={city.id}>
+            <Link
+              to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`}
+              className="location"
+              key={city.id}
+            >
               <h3>{city.name}</h3>
 
-              {weather[index]?.data ? (
+              {weather[index]?.isSuccess && weather[index]?.data ? (
                 <p className="temp">
                   <span className="value">
-                    {weather[index].data?.current.temperature}
+                    {weather[index].data?.current?.temperature}
                   </span>
                   &#186;
                   <span>C</span>
@@ -74,7 +67,7 @@ export default function Home() {
               <p className="summary">
                 {weather[index]?.data?.current?.weather_descriptions[0]}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -102,10 +95,10 @@ const StyledHome = styled.section`
       margin-left: auto;
       display: flex;
 
-      .celcius {
-        background: #e7e7eb;
-        color: #110e3c;
+      .celcius,
+      .fahrenheit {
         border-radius: 50%;
+        cursor: pointer;
         width: 28px;
         height: 28px;
         display: flex;
@@ -114,18 +107,15 @@ const StyledHome = styled.section`
         font-weight: 700;
         font-size: 0.9rem;
       }
+
+      .celcius {
+        background: #e7e7eb;
+        color: #110e3c;
+      }
       .fahrenheit {
-        border-radius: 50%;
         background: #585676;
         color: #e7e7eb;
         margin-left: 1rem;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.9rem;
       }
     }
   }
@@ -136,25 +126,12 @@ const StyledHome = styled.section`
     text-align: center;
     font-weight: 500;
     padding: 1.5rem;
+    margin-top: 3.2rem;
 
     .day {
       font-size: 1.15rem;
       text-transform: uppercase;
       margin-top: 0.4rem;
-    }
-  }
-
-  .current {
-    text-align: center;
-    margin-top: 2.5rem;
-
-    .current__location {
-      background: #1e213a;
-      color: #e7e7eb;
-      padding: 0.7rem 1.5rem;
-      border-radius: 0.7rem;
-      -webkit-appearance: button;
-      border: 1px solid rebeccapurple;
     }
   }
 
@@ -204,7 +181,7 @@ const StyledHome = styled.section`
     border-radius: 4px;
     padding: 1rem;
     text-align: center;
-    border: 1px solid rebeccapurple;
+    border: 1px solid #643399;
     box-shadow: 0px 6px 10px 0px hsla(0, 0%, 0%, 0.14),
       0px 1px 18px 0px hsla(0, 0%, 0%, 0.12), 0px 3px 5px -1px hsla(0, 0%, 0%, 0.2);
     transition: transform 0.3s ease;

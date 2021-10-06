@@ -1,5 +1,6 @@
 body {
-  background: #100e1d;
+  /* background: #100e1d; */
+  background: #312d4e;
   color: #e7e7eb;
   margin: 0;
   font-family: 'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
@@ -7,6 +8,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .container {

@@ -1,29 +1,42 @@
 import { AxiosResponse } from 'axios';
-import { useQueries, UseQueryResult } from 'react-query';
-import { WeatherResponse } from '../../types';
+import { useQueries, useQuery, UseQueryResult } from 'react-query';
+import { WeatherKey, WeatherResponse } from '../../types';
 import { axiosWeatherClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
 
-export function useGetCityWeather(locations: any[]) {
+export function useGetCityWeather(locations: WeatherKey[]) {
   return useQueries(
     locations.map(location => ({
-      queryKey: ['weather', location.location],
+      queryKey: ['weather', { coords: location.coords }],
       queryFn: (): Promise<AxiosResponse<WeatherResponse>> =>
         axiosWeatherClient.get('/current', {
           params: {
-            query: location.location,
+            query: location.coords,
           },
         }),
-      enabled: location.location.length > 0,
+      enabled: Boolean(location.coords),
       select: response => ({
         ...(response as AxiosResponse<WeatherResponse>).data,
-        request: {
-          ...(response as AxiosResponse<WeatherResponse>).data.request,
-          cityId: location.cityId,
-        },
       }),
       staleTime: ONE_HOUR_IN_MILLISECONDS,
     }))
   ) as UseQueryResult<WeatherResponse, Error>[];
+}
+
+export function useCityWeather(location: WeatherKey) {
+  return useQuery<AxiosResponse<WeatherResponse>, Error, WeatherResponse>(
+    ['weather', { coords: location.coords }],
+    () =>
+      axiosWeatherClient.get('/current', {
+        params: {
+          query: location.coords,
+        },
+      }),
+    {
+      enabled: Boolean(location.coords),
+      select: response => response.data,
+      staleTime: ONE_HOUR_IN_MILLISECONDS,
+    }
+  );
 }

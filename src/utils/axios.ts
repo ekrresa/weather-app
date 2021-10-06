@@ -14,5 +14,7 @@ export const axiosCitiesClient = axios.create({
 export const axiosWeatherClient = axios.create({
   baseURL: process.env.REACT_APP_WEATHER_BASE_URL,
   cancelToken: source.token,
-  params: { access_key: process.env.REACT_APP_WEATHER_API_KEY },
+  params: {
+    access_key: process.env.REACT_APP_WEATHER_API_KEY,
+  },
 });

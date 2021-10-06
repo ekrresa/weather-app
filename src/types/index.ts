@@ -1,6 +1,10 @@
-export type CityResponse = {
+export type CitiesResponse = {
   data: City[];
   links: Link[];
+};
+
+export type CityResponse = {
+  data: City;
 };
 
 export type City = {
@@ -23,9 +27,13 @@ type Link = {
   href: string;
 };
 
+export type WeatherKey = {
+  cityId?: number | string;
+  coords: string;
+};
+
 export type WeatherResponse = {
   request: {
-    cityId: string;
     type: string;
     query: string;
     language: string;
@@ -58,6 +66,5 @@ export type WeatherResponse = {
     feelslike: number;
     uv_index: number;
     visibility: number;
-    is_day: string;
   };
 };
