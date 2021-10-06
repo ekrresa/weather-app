@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { BiTrash } from 'react-icons/bi';
 import { FiStar } from 'react-icons/fi';
 import styled from 'styled-components';
 
@@ -8,20 +9,26 @@ import { useGetCities } from '../hooks/api/cities';
 import { extractCoordinates } from '../helpers';
 import { useGetCityWeather } from '../hooks/api/weather';
 import { Header } from '../components/Header';
+import { City } from '../types';
 
 export default function Home() {
   const [locations, setLocations] = useState<any[]>([]);
+  const [sortedCities, setSortedCities] = useState<City[]>([]);
+
   const cities = useGetCities();
   const weather = useGetCityWeather(locations);
 
   useEffect(() => {
     if (cities.data) {
       const str = extractCoordinates(cities.data.data);
+      const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
+
       setLocations(str);
+      setSortedCities(sortedCities);
     }
   }, [cities.data]);
 
-  if (!cities.data) {
+  if (cities.isLoading) {
     return <div>Loading...</div>;
   }
 
@@ -44,31 +51,37 @@ export default function Home() {
         </div>
 
         <div className="locations">
-          {cities.data?.data.map((city, index) => (
-            <Link
-              to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`}
-              className="location"
-              key={city.id}
-            >
-              <h3>{city.name}</h3>
+          {cities.isSuccess &&
+            sortedCities.length > 0 &&
+            sortedCities.map((city, index) => (
+              <Link
+                to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`}
+                className="location"
+                key={city.id}
+              >
+                <h3>{city.name}</h3>
 
-              {weather[index]?.isSuccess && weather[index]?.data ? (
-                <p className="temp">
-                  <span className="value">
-                    {weather[index].data?.current?.temperature}
-                  </span>
-                  &#186;
-                  <span>C</span>
+                <span className="trash">
+                  <BiTrash />
+                </span>
+
+                {weather[index]?.isSuccess && weather[index]?.data ? (
+                  <p className="temp">
+                    <span className="value">
+                      {weather[index].data?.current?.temperature}
+                    </span>
+                    &#186;
+                    <span>C</span>
+                  </p>
+                ) : (
+                  <p className="temp">loading...</p>
+                )}
+
+                <p className="summary">
+                  {weather[index]?.data?.current?.weather_descriptions[0]}
                 </p>
-              ) : (
-                <p className="temp">loading...</p>
-              )}
-
-              <p className="summary">
-                {weather[index]?.data?.current?.weather_descriptions[0]}
-              </p>
-            </Link>
-          ))}
+              </Link>
+            ))}
         </div>
       </section>
     </StyledHome>
@@ -173,6 +186,7 @@ const StyledHome = styled.section`
   }
 
   .location {
+    position: relative;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -181,13 +195,17 @@ const StyledHome = styled.section`
     border-radius: 4px;
     padding: 1rem;
     text-align: center;
-    border: 1px solid #643399;
+    border: 2px solid #69557d;
     box-shadow: 0px 6px 10px 0px hsla(0, 0%, 0%, 0.14),
       0px 1px 18px 0px hsla(0, 0%, 0%, 0.12), 0px 3px 5px -1px hsla(0, 0%, 0%, 0.2);
     transition: transform 0.3s ease;
 
     &:hover {
       transform: scale(1.1);
+
+      .trash {
+        display: inline-block;
+      }
     }
 
     h3 {
@@ -195,6 +213,18 @@ const StyledHome = styled.section`
       margin-bottom: 1rem;
       font-size: 1.4rem;
       font-weight: 500;
+    }
+
+    .trash {
+      display: none;
+      position: absolute;
+      right: 3%;
+      top: 3%;
+
+      svg {
+        font-size: 1.3rem;
+        fill: #ffb17f;
+      }
     }
 
     .value {
