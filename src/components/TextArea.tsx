@@ -60,7 +60,7 @@ const StyledDraft = styled.div`
 
   .DraftEditor-root {
     min-height: 4rem;
-    background: #fff;
+    background: #fffff0;
     color: #212121;
     padding: 1rem;
     font-family: 'Roboto';

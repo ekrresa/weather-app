@@ -7,9 +7,12 @@ import styled from 'styled-components';
 import { TextArea } from './TextArea';
 import { saveNotes } from '../helpers';
 import { useNotesQuery } from '../hooks/api/notes';
+import { Modal } from './Modal';
 
 export function Notes({ cityId }: { cityId: string }) {
   const textAreaRef = useRef();
+  const [modalOpen, setModalOpen] = useState({ state: false, content: '' });
+  const [noteId, setNoteId] = useState('');
   const [formState, toggleForm] = useState(false);
   const [note, setNote] = useState('');
 
@@ -39,6 +42,17 @@ export function Notes({ cityId }: { cityId: string }) {
 
   return (
     <StyledNotes>
+      <Modal
+        modalOpen={modalOpen.state}
+        handleClose={() => setModalOpen({ state: false, content: '' })}
+        onClick={() => setModalOpen({ state: false, content: '' })}
+      >
+        <div
+          className="modal__content"
+          dangerouslySetInnerHTML={{ __html: sanitize(modalOpen.content) }}
+        ></div>
+      </Modal>
+
       <div className="notes__header">
         <h3>Notes</h3>
         <span onClick={() => toggleForm(!formState)}>
@@ -64,6 +78,7 @@ export function Notes({ cityId }: { cityId: string }) {
               className="note"
               key={index}
               dangerouslySetInnerHTML={{ __html: sanitize(note) }}
+              onClick={() => setModalOpen({ state: true, content: note })}
             />
           ))}
         </div>
