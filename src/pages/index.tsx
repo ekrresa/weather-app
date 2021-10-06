@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { BiTrash } from 'react-icons/bi';
@@ -27,6 +27,12 @@ export default function Home() {
       setSortedCities(sortedCities);
     }
   }, [cities.data]);
+
+  const removeCity = (e: SyntheticEvent, cityId: number) => {
+    e.preventDefault();
+
+    setSortedCities(sortedCities.filter(city => city.id !== cityId));
+  };
 
   if (cities.isLoading) {
     return <div>Loading...</div>;
@@ -61,7 +67,7 @@ export default function Home() {
               >
                 <h3>{city.name}</h3>
 
-                <span className="trash">
+                <span className="trash" onClick={e => removeCity(e, city.id)}>
                   <BiTrash />
                 </span>
 
@@ -220,10 +226,17 @@ const StyledHome = styled.section`
       position: absolute;
       right: 3%;
       top: 3%;
+      z-index: 10;
+      isolation: isolate;
+      padding: 0.3rem;
 
       svg {
         font-size: 1.3rem;
         fill: #ffb17f;
+      }
+
+      &:hover {
+        fill: #ffb07fc3;
       }
     }
 
