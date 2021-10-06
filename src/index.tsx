@@ -4,13 +4,31 @@ import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
+import { persistQueryClient } from 'react-query/persistQueryClient-experimental';
+import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor-experimental';
+
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+const ONE_DAY_IN_MILLISECONDS = 86_400_000;
+
+const localStoragePersistor = createWebStoragePersistor({ storage: window.localStorage });
+
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      cacheTime: ONE_DAY_IN_MILLISECONDS,
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
 });
+
+// persistQueryClient({
+//   persistor: localStoragePersistor,
+//   queryClient,
+// });
 
 ReactDOM.render(
   <React.StrictMode>

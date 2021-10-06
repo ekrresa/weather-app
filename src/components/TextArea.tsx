@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { convertToRaw, Editor, EditorState } from 'draft-js';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { ContentState, convertToRaw, Editor, EditorState } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import styled from 'styled-components';
 
@@ -7,9 +7,21 @@ type Props = {
   onChange: (content: string) => void;
 };
 
-export function TextArea({ onChange }: Props) {
+export const TextArea = forwardRef(({ onChange }: Props, ref) => {
   const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
   const editorRef = useRef<any>(null);
+
+  useImperativeHandle(ref, () => ({
+    clearEditor() {
+      const newEditorState = EditorState.push(
+        editorState,
+        ContentState.createFromText(''),
+        'remove-range'
+      );
+
+      setEditorState(newEditorState);
+    },
+  }));
 
   return (
     <StyledDraft>
@@ -40,7 +52,7 @@ export function TextArea({ onChange }: Props) {
       </div>
     </StyledDraft>
   );
-}
+});
 
 const StyledDraft = styled.div`
   .draft__wrapper {

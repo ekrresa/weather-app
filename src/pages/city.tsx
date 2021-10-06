@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
-import { GoPencil } from 'react-icons/go';
 import styled from 'styled-components';
 
 import { Header } from '../components/Header';
 import { useCityDetails } from '../hooks/api/cities';
 import { useCityWeather } from '../hooks/api/weather';
-import { TextArea } from '../components/TextArea';
+import { Notes } from '../components/Notes';
 
 export default function City() {
   const queryParams = new URLSearchParams(useLocation().search);
@@ -96,32 +95,7 @@ export default function City() {
           </div>
         </section>
 
-        <section className="notes">
-          <div className="notes__header">
-            <h3>Notes</h3>
-            <span onClick={() => toggleForm(!formState)}>
-              <GoPencil />
-            </span>
-          </div>
-
-          {formState && (
-            <form className="notes__form">
-              <TextArea onChange={() => {}} />
-              <button>save</button>
-            </form>
-          )}
-
-          <div className="notes__list">
-            {new Array(6).fill('ha').map((_, index) => (
-              <div className="note" key={index}>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Repellendus quo
-                similique distinctio omnis dolor asperiores recusandae, dolores odio ut
-                necessitatibus voluptatem fugit architecto ducimus. Nulla repellendus
-                praesentium facere iure libero!
-              </div>
-            ))}
-          </div>
-        </section>
+        <Notes cityId={queryParams.get('cityId')!} />
       </main>
     </StyledCity>
   );
@@ -211,68 +185,6 @@ const StyledCity = styled.section`
 
     .metrics__right {
       text-align: end;
-    }
-  }
-
-  .notes {
-    margin-top: 3rem;
-
-    .notes__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 35rem;
-      margin-left: auto;
-      margin-right: auto;
-
-      h3 {
-        font-size: 1.5rem;
-      }
-
-      span {
-        cursor: pointer;
-        padding: 0.8rem 0;
-
-        svg {
-          font-size: 1.2rem;
-        }
-      }
-    }
-
-    .notes__form {
-      max-width: 27rem;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 1rem;
-      margin-bottom: 3rem;
-
-      button {
-        width: 100%;
-        margin-top: 0.4rem;
-        padding: 0.7rem 0.3rem;
-        text-transform: uppercase;
-        font-weight: 600;
-        background: #9e579d;
-        border: 1px solid #9e579d;
-        color: #fff;
-        border-radius: 1px;
-      }
-    }
-
-    .notes__list {
-      display: grid;
-      gap: 2rem;
-      grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
-      max-width: 40rem;
-      margin-left: auto;
-      margin-right: auto;
-      padding-bottom: 5rem;
-
-      .note {
-        border: 1px solid rebeccapurple;
-        padding: 1rem;
-        border-radius: 5px;
-      }
     }
   }
 `;
