@@ -10,6 +10,7 @@ import { Header } from '../components/Header';
 import { useCityDetails } from '../hooks/api/cities';
 import { useCityWeather } from '../hooks/api/weather';
 import { Notes } from '../components/Notes';
+import { Loader } from '../components/Loader';
 import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
 
 type QueryParams = {
@@ -35,7 +36,7 @@ export default function City() {
   });
 
   if (cityDetails.isLoading || weatherDetails.isLoading) {
-    return <div>Fetching info...</div>;
+    return <Loader />;
   }
 
   if (cityDetails.isError || weatherDetails.isError) {

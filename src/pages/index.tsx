@@ -19,6 +19,7 @@ import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';
 import { City } from '../types';
 import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
+import { Loader } from '../components/Loader';
 
 export default function Home() {
   const history = useHistory();
@@ -80,7 +81,9 @@ export default function Home() {
     });
   };
 
-  const geoPositionError = (error: GeolocationPositionError) => {};
+  const geoPositionError = (error: GeolocationPositionError) => {
+    console.log(error);
+  };
 
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
@@ -120,7 +123,7 @@ export default function Home() {
   };
 
   if (cities.isLoading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (

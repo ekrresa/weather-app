@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BiTrash } from 'react-icons/bi';
 import { IoMdStarOutline } from 'react-icons/io';
 import { HiStar } from 'react-icons/hi';
+import ClipLoader from 'react-spinners/ClipLoader';
 import styled, { css } from 'styled-components';
 
 import { City, WeatherResponse } from '../types';
@@ -58,16 +59,19 @@ export function CityBlock({
       </div>
 
       {weather?.isSuccess && weather?.data ? (
-        <p className="temp">
-          <span className="value">{weather.data?.current?.temperature}</span>
-          &#186;
-          <span>C</span>
-        </p>
+        <>
+          <p className="temp">
+            <span className="value">{weather.data?.current?.temperature}</span>
+            &#186;
+            <span>C</span>
+          </p>
+          <p className="summary">{weather?.data?.current?.weather_descriptions[0]}</p>
+        </>
       ) : (
-        <p className="temp">loading...</p>
+        <span style={{ marginTop: 'auto' }}>
+          <ClipLoader color="#f3558e" size={15} />
+        </span>
       )}
-
-      <p className="summary">{weather?.data?.current?.weather_descriptions[0]}</p>
     </StyledCityBlock>
   );
 }
