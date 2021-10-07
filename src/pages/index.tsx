@@ -1,25 +1,32 @@
 import { SyntheticEvent, useEffect, useState } from 'react';
+import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import { useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { useCitySearch, useGetCities } from '../hooks/api/cities';
+import {
+  useCitySearch,
+  useFavouriteCitiesQuery,
+  useGetCities,
+} from '../hooks/api/cities';
 import { useGetCityWeather } from '../hooks/api/weather';
 import { CityBlock } from '../components/City';
 import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';
 import { City } from '../types';
+import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
 
 export default function Home() {
   const history = useHistory();
   const [locations, setLocations] = useState<any[]>([]);
   const [sortedCities, setSortedCities] = useState<City[]>([]);
-  const [favouriteCities, setFavouriteCities] = useState<City[]>([]);
   const [cityName, setCityName] = useState('');
 
+  const queryClient = useQueryClient();
   const cities = useGetCities();
   const weather = useGetCityWeather(locations);
+  const favouriteCities = useFavouriteCitiesQuery();
   const citySearch = useCitySearch(cityName);
 
   useEffect(() => {
@@ -31,6 +38,11 @@ export default function Home() {
       setSortedCities(sortedCities);
     }
   }, [cities.data]);
+
+  useEffect(() => {
+    if (favouriteCities) {
+    }
+  }, [favouriteCities]);
 
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
@@ -44,31 +56,29 @@ export default function Home() {
     setSortedCities(sortedCities.filter(city => city.id !== cityId));
   };
 
-  const removeFavourite = (e: SyntheticEvent, cityId: number) => {
+  const removeFavourite = async (e: SyntheticEvent, cityId: number) => {
     e.preventDefault();
 
-    const remainingFavourites = favouriteCities.filter(city => city.id !== cityId);
     const removedCity = cities.data?.data.find(city => city.id === cityId);
 
     if (removedCity) {
       setSortedCities(
         [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
       );
+      await removeFavouriteCity(cityId);
+      await queryClient.invalidateQueries(['cities', 'favourite']);
     }
-
-    setFavouriteCities(remainingFavourites);
   };
 
-  const setFavourite = (e: SyntheticEvent, cityId: number) => {
+  const setFavourite = async (e: SyntheticEvent, cityId: number) => {
     e.preventDefault();
 
     const [favCity] = sortedCities.filter(city => city.id === cityId);
     const remainCities = sortedCities.filter(city => city.id !== cityId);
 
     setSortedCities(remainCities);
-    setFavouriteCities(
-      [...favouriteCities, favCity].sort((a, b) => (a.city < b.city ? -1 : 1))
-    );
+    await saveFavouriteCity(favCity);
+    await queryClient.invalidateQueries(['cities', 'favourite']);
   };
 
   if (cities.isLoading) {
@@ -98,17 +108,18 @@ export default function Home() {
         </div>
 
         <div className="locations">
-          {favouriteCities.map((city, index) => (
-            <CityBlock
-              key={city.id}
-              city={city}
-              isFavourite={true}
-              removeCity={removeCity}
-              removeFavourite={removeFavourite}
-              setFavourite={setFavourite}
-              weather={weather[index]}
-            />
-          ))}
+          {favouriteCities.isSuccess &&
+            favouriteCities.data.map((city, index) => (
+              <CityBlock
+                key={city.id}
+                city={city}
+                isFavourite={true}
+                removeCity={removeCity}
+                removeFavourite={removeFavourite}
+                setFavourite={setFavourite}
+                weather={weather[index]}
+              />
+            ))}
 
           {cities.isSuccess &&
             sortedCities.length > 0 &&

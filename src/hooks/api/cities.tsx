@@ -1,5 +1,6 @@
 import { AxiosResponse } from 'axios';
 import { useQuery } from 'react-query';
+import { getFavouriteCities } from '../../helpers/cities';
 import { CitiesResponse, City, CityResponse } from '../../types';
 import { axiosCitiesClient } from '../../utils/axios';
 
@@ -49,4 +50,10 @@ export function useCitySearch(cityName: string = '') {
       staleTime: ONE_HOUR_IN_MILLISECONDS,
     }
   );
+}
+
+export function useFavouriteCitiesQuery() {
+  return useQuery<City[], Error>(['cities', 'favourite'], () => getFavouriteCities(), {
+    staleTime: Infinity,
+  });
 }
