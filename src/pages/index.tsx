@@ -1,22 +1,26 @@
 import { SyntheticEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { BiTrash } from 'react-icons/bi';
-import { FiStar } from 'react-icons/fi';
+import { useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { useGetCities } from '../hooks/api/cities';
-import { extractCoordinates } from '../helpers';
+import { useCitySearch, useGetCities } from '../hooks/api/cities';
 import { useGetCityWeather } from '../hooks/api/weather';
+import { CityBlock } from '../components/City';
+import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
+import { extractCoordinates } from '../helpers';
 import { City } from '../types';
 
 export default function Home() {
+  const history = useHistory();
   const [locations, setLocations] = useState<any[]>([]);
   const [sortedCities, setSortedCities] = useState<City[]>([]);
+  const [favouriteCities, setFavouriteCities] = useState<City[]>([]);
+  const [cityName, setCityName] = useState('');
 
   const cities = useGetCities();
   const weather = useGetCityWeather(locations);
+  const citySearch = useCitySearch(cityName);
 
   useEffect(() => {
     if (cities.data) {
@@ -28,10 +32,43 @@ export default function Home() {
     }
   }, [cities.data]);
 
+  const handleSelect = (city: City | null | undefined) => {
+    if (city) {
+      history.push(`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`);
+    }
+  };
+
   const removeCity = (e: SyntheticEvent, cityId: number) => {
     e.preventDefault();
 
     setSortedCities(sortedCities.filter(city => city.id !== cityId));
+  };
+
+  const removeFavourite = (e: SyntheticEvent, cityId: number) => {
+    e.preventDefault();
+
+    const remainingFavourites = favouriteCities.filter(city => city.id !== cityId);
+    const removedCity = cities.data?.data.find(city => city.id === cityId);
+
+    if (removedCity) {
+      setSortedCities(
+        [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
+      );
+    }
+
+    setFavouriteCities(remainingFavourites);
+  };
+
+  const setFavourite = (e: SyntheticEvent, cityId: number) => {
+    e.preventDefault();
+
+    const [favCity] = sortedCities.filter(city => city.id === cityId);
+    const remainCities = sortedCities.filter(city => city.id !== cityId);
+
+    setSortedCities(remainCities);
+    setFavouriteCities(
+      [...favouriteCities, favCity].sort((a, b) => (a.city < b.city ? -1 : 1))
+    );
   };
 
   if (cities.isLoading) {
@@ -50,43 +87,40 @@ export default function Home() {
       <section className="container">
         <div className="location__title">
           <h2>Locations</h2>
-          <button>
-            <FiStar />
-            <span>Favorites</span>
-          </button>
+
+          <ComboBox
+            data={citySearch.data}
+            isError={citySearch.isError}
+            loading={citySearch.isLoading}
+            onChange={val => setCityName(val)}
+            selectCity={handleSelect}
+          />
         </div>
 
         <div className="locations">
+          {favouriteCities.map((city, index) => (
+            <CityBlock
+              key={city.id}
+              city={city}
+              isFavourite={true}
+              removeCity={removeCity}
+              removeFavourite={removeFavourite}
+              setFavourite={setFavourite}
+              weather={weather[index]}
+            />
+          ))}
+
           {cities.isSuccess &&
             sortedCities.length > 0 &&
             sortedCities.map((city, index) => (
-              <Link
-                to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`}
-                className="location"
+              <CityBlock
                 key={city.id}
-              >
-                <h3>{city.name}</h3>
-
-                <span className="trash" onClick={e => removeCity(e, city.id)}>
-                  <BiTrash />
-                </span>
-
-                {weather[index]?.isSuccess && weather[index]?.data ? (
-                  <p className="temp">
-                    <span className="value">
-                      {weather[index].data?.current?.temperature}
-                    </span>
-                    &#186;
-                    <span>C</span>
-                  </p>
-                ) : (
-                  <p className="temp">loading...</p>
-                )}
-
-                <p className="summary">
-                  {weather[index]?.data?.current?.weather_descriptions[0]}
-                </p>
-              </Link>
+                city={city}
+                isFavourite={false}
+                removeCity={removeCity}
+                setFavourite={setFavourite}
+                weather={weather[index]}
+              />
             ))}
         </div>
       </section>
@@ -158,29 +192,14 @@ const StyledHome = styled.section`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 3rem;
+    margin-top: 4rem;
     margin-bottom: 2rem;
 
     h2 {
       margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    button {
-      color: #e7e7eb;
-      background: #100e1d;
-      border: 1px solid #585676;
-      display: flex;
-      align-items: flex-end;
-      font-size: 0.9rem;
+      font-size: 1.3rem;
       font-weight: 500;
-      padding: 0.38rem 0.9rem;
-      border-radius: 4px;
-
-      span {
-        margin-left: 0.3rem;
-      }
+      font-family: 'Roboto';
     }
   }
 
@@ -189,73 +208,5 @@ const StyledHome = styled.section`
     gap: 2rem;
     grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
     padding-bottom: 4rem;
-  }
-
-  .location {
-    position: relative;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    background: #1e213a;
-    color: #e7e7eb;
-    border-radius: 4px;
-    padding: 1rem;
-    text-align: center;
-    border: 2px solid #69557d;
-    box-shadow: 0px 6px 10px 0px hsla(0, 0%, 0%, 0.14),
-      0px 1px 18px 0px hsla(0, 0%, 0%, 0.12), 0px 3px 5px -1px hsla(0, 0%, 0%, 0.2);
-    transition: transform 0.3s ease;
-
-    &:hover {
-      transform: scale(1.1);
-
-      .trash {
-        display: inline-block;
-      }
-    }
-
-    h3 {
-      margin-top: 0.7rem;
-      margin-bottom: 1rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-    }
-
-    .trash {
-      display: none;
-      position: absolute;
-      right: 3%;
-      top: 3%;
-      z-index: 10;
-      isolation: isolate;
-      padding: 0.3rem;
-
-      svg {
-        font-size: 1.3rem;
-        fill: #ffb17f;
-      }
-
-      &:hover {
-        fill: #ffb07fc3;
-      }
-    }
-
-    .value {
-      font-size: 1.2rem;
-      margin-right: 0.2rem;
-    }
-
-    .temp {
-      font-size: 1.4rem;
-      font-weight: 500;
-      margin-top: auto;
-      margin-bottom: 0;
-    }
-
-    .summary {
-      font-size: 0.8rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
   }
 `;

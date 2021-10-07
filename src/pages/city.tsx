@@ -10,7 +10,6 @@ import { Notes } from '../components/Notes';
 
 export default function City() {
   const queryParams = new URLSearchParams(useLocation().search);
-  const [formState, toggleForm] = useState(false);
 
   const cityDetails = useCityDetails(queryParams.get('cityId')!);
   const weatherDetails = useCityWeather({
@@ -123,6 +122,7 @@ const StyledCity = styled.section`
     }
     .time {
       margin-top: 0.5rem;
+      margin-bottom: 0.3rem;
       font-size: 1.5rem;
       align-self: center;
     }

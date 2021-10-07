@@ -30,9 +30,23 @@ export function useCityDetails(cityId: string = '') {
     ['city', cityId],
     () => axiosCitiesClient.get(`/v1/geo/cities/${cityId}`),
     {
-      cacheTime: ONE_DAY_IN_MILLISECONDS,
-      enabled: Boolean(cityId?.length > 0),
+      enabled: cityId.length > 0,
       select: response => response.data,
+      staleTime: ONE_HOUR_IN_MILLISECONDS,
+    }
+  );
+}
+
+export function useCitySearch(cityName: string = '') {
+  return useQuery<AxiosResponse<CitiesResponse>, Error, City[]>(
+    ['city', 'search', cityName],
+    () =>
+      axiosCitiesClient.get(`/v1/geo/cities`, {
+        params: { limit: 30, namePrefix: cityName },
+      }),
+    {
+      enabled: cityName.length > 0,
+      select: response => response.data.data,
       staleTime: ONE_HOUR_IN_MILLISECONDS,
     }
   );
