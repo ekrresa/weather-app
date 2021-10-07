@@ -1,5 +1,6 @@
 import { ReactNode, SyntheticEvent } from 'react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
+import { IoClose } from 'react-icons/io5';
 import styled from 'styled-components';
 
 type ModalProps = {
@@ -30,7 +31,7 @@ export function Modal({ children, handleClose, modalOpen, onClick }: ModalProps)
           >
             {children}
             <button className="close__btn" onClick={handleClose}>
-              Close
+              <IoClose />
             </button>
           </StyledModal>
         </Backdrop>
@@ -72,6 +73,7 @@ const Backdrop = styled.div`
 `;
 
 const StyledModal = styled.div`
+  position: relative;
   max-width: 30rem;
   min-width: 13rem;
   margin: auto;
@@ -82,22 +84,26 @@ const StyledModal = styled.div`
   display: flex;
   flex-direction: column;
 
+  .close__btn {
+    border: 1px solid #fffff0;
+    background: inherit;
+    position: absolute;
+    padding: 0.2rem;
+    border-radius: 50%;
+    cursor: pointer;
+    top: 3%;
+    right: 2%;
+
+    svg {
+      font-size: 1.5rem;
+    }
+  }
+
   .modal__content {
     font-weight: 500;
 
     p {
       margin-block: 0.5rem;
     }
-  }
-
-  .close__btn {
-    background: #9e579d;
-    color: #fff;
-    width: 100%;
-    border: 1px solid #9e579d;
-    padding: 0.6rem 0.5rem;
-    border-radius: 3px;
-    margin-top: 1rem;
-    cursor: pointer;
   }
 `;

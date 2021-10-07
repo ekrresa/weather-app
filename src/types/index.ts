@@ -27,6 +27,11 @@ type Link = {
   href: string;
 };
 
+export type Note = {
+  id: string;
+  content: string;
+};
+
 export type WeatherKey = {
   cityId?: number | string;
   coords: string;

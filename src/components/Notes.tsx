@@ -5,22 +5,31 @@ import { sanitize } from 'dompurify';
 import styled from 'styled-components';
 
 import { TextArea } from './TextArea';
-import { saveNotes } from '../helpers';
+import { generateId, saveNotes } from '../helpers';
 import { useNotesQuery } from '../hooks/api/notes';
 import { Modal } from './Modal';
+import { EditableNote } from './EditableNote';
+import { Note } from '../types';
+
+type ModalStateProps = {
+  state: boolean;
+  content: Note | null;
+};
 
 export function Notes({ cityId }: { cityId: string }) {
   const textAreaRef = useRef();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [modalOpen, setModalOpen] = useState({ state: false, content: '' });
-  const [noteId, setNoteId] = useState('');
+  const [modalOpen, setModalOpen] = useState<ModalStateProps>({
+    state: false,
+    content: null,
+  });
   const [formState, toggleForm] = useState(false);
   const [note, setNote] = useState('');
 
   const queryClient = useQueryClient();
   const notes = useNotesQuery(cityId);
-  const notesRequest = useMutation((data: string) => saveNotes(cityId, data));
+  const notesRequest = useMutation((data: Note) => saveNotes(cityId, data));
 
   useEffect(() => {
     if (formState && formRef?.current) {
@@ -38,16 +47,19 @@ export function Notes({ cityId }: { cityId: string }) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     if (!note) {
       return;
     }
 
-    notesRequest.mutate(sanitize(note), {
+    const newNote = { id: generateId(), content: sanitize(note) };
+
+    notesRequest.mutate(newNote, {
       onError: err => {
         console.log(err);
       },
       onSuccess: () => {
-        queryClient.invalidateQueries(['note', cityId]);
+        queryClient.invalidateQueries(['notes', cityId]);
         if (textAreaRef && textAreaRef.current) {
           //@ts-expect-error
           textAreaRef.current.clearEditor();
@@ -60,13 +72,12 @@ export function Notes({ cityId }: { cityId: string }) {
     <StyledNotes>
       <Modal
         modalOpen={modalOpen.state}
-        handleClose={() => setModalOpen({ state: false, content: '' })}
-        onClick={() => setModalOpen({ state: false, content: '' })}
+        handleClose={() => setModalOpen({ state: false, content: null })}
+        onClick={() => setModalOpen({ state: false, content: null })}
       >
-        <div
-          className="modal__content"
-          dangerouslySetInnerHTML={{ __html: sanitize(modalOpen.content) }}
-        ></div>
+        <div className="modal__content">
+          <EditableNote cityId={cityId} note={modalOpen.content!} />
+        </div>
       </Modal>
 
       <div className="notes__header">
@@ -78,7 +89,9 @@ export function Notes({ cityId }: { cityId: string }) {
 
       {formState && (
         <form ref={formRef} className="notes__form" onSubmit={handleSubmit}>
-          <TextArea onChange={val => setNote(val)} ref={textAreaRef} />
+          <div className="textarea">
+            <TextArea onChange={val => setNote(val)} ref={textAreaRef} />
+          </div>
           <button>save</button>
         </form>
       )}
@@ -93,7 +106,7 @@ export function Notes({ cityId }: { cityId: string }) {
             <div
               className="note"
               key={index}
-              dangerouslySetInnerHTML={{ __html: sanitize(note) }}
+              dangerouslySetInnerHTML={{ __html: sanitize(note.content) }}
               onClick={() => setModalOpen({ state: true, content: note })}
             />
           ))}
@@ -135,6 +148,11 @@ const StyledNotes = styled.section`
     padding: 1rem;
     margin-bottom: 3rem;
 
+    .textarea {
+      padding: 1rem;
+      background: #fffff0;
+    }
+
     button {
       width: 100%;
       margin-top: 0.4rem;
@@ -162,6 +180,7 @@ const StyledNotes = styled.section`
       border: 2px solid #69557d;
       padding: 0.5rem 1rem;
       border-radius: 8px;
+      max-width: 20rem;
       cursor: pointer;
 
       p {

@@ -4,7 +4,6 @@ import { CitiesResponse, City, CityResponse } from '../../types';
 import { axiosCitiesClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
-const ONE_DAY_IN_MILLISECONDS = 86_400_000;
 
 export function useGetCities() {
   return useQuery<AxiosResponse<CitiesResponse>, Error, CitiesResponse>(
