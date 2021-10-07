@@ -2,6 +2,7 @@ import { SyntheticEvent, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import { useHistory } from 'react-router-dom';
+import arrayDiff from 'lodash.differencewith';
 import styled from 'styled-components';
 
 import {
@@ -30,14 +31,19 @@ export default function Home() {
   const citySearch = useCitySearch(cityName);
 
   useEffect(() => {
-    if (cities.data) {
+    if (cities.data && favouriteCities.data) {
       const str = extractCoordinates(cities.data.data);
       const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
+      const notFavouriteCities = arrayDiff(
+        sortedCities,
+        favouriteCities.data,
+        (a, b) => a.id === b.id
+      );
 
       setLocations(str);
-      setSortedCities(sortedCities);
+      setSortedCities(notFavouriteCities);
     }
-  }, [cities.data]);
+  }, [cities.data, favouriteCities.data]);
 
   useEffect(() => {
     if (favouriteCities) {
