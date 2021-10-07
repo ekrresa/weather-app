@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { TextArea } from './TextArea';
 import { useNotesQuery } from '../hooks/api/notes';
 import { Note } from '../types';
-import { editNotes } from '../helpers';
+import { editNotes } from '../helpers/notes';
 
 type EditableNoteProps = {
   cityId: string;

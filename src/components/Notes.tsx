@@ -1,11 +1,12 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+import { FormEvent, SyntheticEvent, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from 'react-query';
+import { BiTrash } from 'react-icons/bi';
 import { GoPencil } from 'react-icons/go';
 import { sanitize } from 'dompurify';
 import styled from 'styled-components';
 
 import { TextArea } from './TextArea';
-import { generateId, saveNotes } from '../helpers';
+import { deleteNote, generateId, saveNote } from '../helpers/notes';
 import { useNotesQuery } from '../hooks/api/notes';
 import { Modal } from './Modal';
 import { EditableNote } from './EditableNote';
@@ -29,7 +30,6 @@ export function Notes({ cityId }: { cityId: string }) {
 
   const queryClient = useQueryClient();
   const notes = useNotesQuery(cityId);
-  const notesRequest = useMutation((data: Note) => saveNotes(cityId, data));
 
   useEffect(() => {
     if (formState && formRef?.current) {
@@ -45,6 +45,13 @@ export function Notes({ cityId }: { cityId: string }) {
     toggleForm(!formState);
   };
 
+  const deleteNoteHandler = async (e: SyntheticEvent, noteId: string) => {
+    e.stopPropagation();
+
+    await deleteNote(cityId, noteId);
+    await queryClient.invalidateQueries(['notes', cityId]);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -54,18 +61,13 @@ export function Notes({ cityId }: { cityId: string }) {
 
     const newNote = { id: generateId(), content: sanitize(note) };
 
-    notesRequest.mutate(newNote, {
-      onError: err => {
-        console.log(err);
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries(['notes', cityId]);
-        if (textAreaRef && textAreaRef.current) {
-          //@ts-expect-error
-          textAreaRef.current.clearEditor();
-        }
-      },
-    });
+    await saveNote(cityId, newNote);
+    await queryClient.invalidateQueries(['notes', cityId]);
+
+    if (textAreaRef && textAreaRef.current) {
+      //@ts-expect-error
+      textAreaRef.current.clearEditor();
+    }
   };
 
   return (
@@ -106,9 +108,13 @@ export function Notes({ cityId }: { cityId: string }) {
             <div
               className="note"
               key={index}
-              dangerouslySetInnerHTML={{ __html: sanitize(note.content) }}
               onClick={() => setModalOpen({ state: true, content: note })}
-            />
+            >
+              <div dangerouslySetInnerHTML={{ __html: sanitize(note.content) }} />
+              <button className="trash__btn" onClick={e => deleteNoteHandler(e, note.id)}>
+                <BiTrash />
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -177,6 +183,7 @@ const StyledNotes = styled.section`
     padding-bottom: 5rem;
 
     .note {
+      position: relative;
       border: 2px solid #69557d;
       padding: 0.5rem 1rem;
       border-radius: 8px;
@@ -187,6 +194,28 @@ const StyledNotes = styled.section`
         margin-block: 0.5rem;
         font-weight: 500;
         font-size: 0.95rem;
+      }
+
+      &:hover {
+        .trash__btn {
+          display: inline-block;
+        }
+      }
+
+      .trash__btn {
+        display: none;
+        position: absolute;
+        background: inherit;
+        border: none;
+        top: 7%;
+        right: 2%;
+        cursor: pointer;
+        z-index: 10;
+
+        svg {
+          font-size: 1.3rem;
+          fill: #ffb17f;
+        }
       }
     }
   }
