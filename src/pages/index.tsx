@@ -1,11 +1,13 @@
 import { SyntheticEvent, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
-import { useHistory } from 'react-router-dom';
 import arrayDiff from 'lodash.differencewith';
-import styled from 'styled-components';
+import localforage from 'localforage';
+import styled, { css } from 'styled-components';
 
 import {
+  useCityByCoordinates,
   useCitySearch,
   useFavouriteCitiesQuery,
   useGetCities,
@@ -20,15 +22,18 @@ import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
 
 export default function Home() {
   const history = useHistory();
+
   const [locations, setLocations] = useState<any[]>([]);
   const [sortedCities, setSortedCities] = useState<City[]>([]);
   const [cityName, setCityName] = useState('');
+  const [userCoords, setUserCoords] = useState({ lat: '', long: '' });
 
   const queryClient = useQueryClient();
   const cities = useGetCities();
   const weather = useGetCityWeather(locations);
   const favouriteCities = useFavouriteCitiesQuery();
   const citySearch = useCitySearch(cityName);
+  const userCity = useCityByCoordinates(userCoords.lat, userCoords.long);
 
   useEffect(() => {
     if (cities.data && favouriteCities.data) {
@@ -46,9 +51,36 @@ export default function Home() {
   }, [cities.data, favouriteCities.data]);
 
   useEffect(() => {
-    if (favouriteCities) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(geoPosition, geoPositionError);
     }
-  }, [favouriteCities]);
+  }, []);
+
+  useEffect(() => {
+    (async function () {
+      const LOCATION_PERMISSION_GRANTED = await localforage.getItem('PERMISSION_GRANTED');
+
+      if (userCity.data && !LOCATION_PERMISSION_GRANTED) {
+        localforage.setItem('PERMISSION_GRANTED', true);
+
+        history.push(
+          `/city?cityId=${userCity.data.id}&lat=${userCoords.lat}&long=${userCoords.long}&isCurrentLocation=true&isFavourite=true`
+        );
+      }
+    })();
+  }, [history, userCity.data, userCoords.lat, userCoords.long]);
+
+  const geoPosition = (position: GeolocationPosition) => {
+    const latitudeSign = position.coords.latitude < 0 ? '-' : '+';
+    const longitudeSign = position.coords.longitude < 0 ? '-' : '+';
+
+    setUserCoords({
+      lat: latitudeSign + String(position.coords.latitude),
+      long: longitudeSign + String(position.coords.longitude),
+    });
+  };
+
+  const geoPositionError = (error: GeolocationPositionError) => {};
 
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
@@ -92,10 +124,24 @@ export default function Home() {
   }
 
   return (
-    <StyledHome>
+    <StyledHome isUserCity={userCity.isSuccess}>
       <Header />
 
-      <div className="today">
+      <div
+        className="today"
+        onClick={() => {
+          if (userCity.data) {
+            history.push(
+              `/city?cityId=${userCity.data.id}&lat=${userCoords.lat}&long=${userCoords.long}&isCurrentLocation=true&isFavourite=true`
+            );
+          }
+        }}
+      >
+        {userCity.isSuccess && (
+          <h1>
+            {userCity.data?.city}, {userCity.data?.country}
+          </h1>
+        )}
         <div className="time">{format(new Date(), 'h:mm b')}</div>
         <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
       </div>
@@ -145,7 +191,7 @@ export default function Home() {
   );
 }
 
-const StyledHome = styled.section`
+const StyledHome = styled.section<{ isUserCity: boolean }>`
   .header {
     background: #1e213a;
 
@@ -194,13 +240,39 @@ const StyledHome = styled.section`
     font-family: 'Roboto';
     font-size: 1.9rem;
     text-align: center;
-    font-weight: 500;
-    padding: 1.5rem;
+    padding: 2.5rem 1.5rem;
     margin-top: 3.2rem;
+    background: #312d4e;
+    border-radius: 19px;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
+
+    ${props =>
+      props.isUserCity
+        ? css`
+            &:hover {
+              box-shadow: 20px 20px 60px #2a2642, -20px -20px 60px #38345a;
+            }
+
+            cursor: pointer;
+          `
+        : null}
+
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      margin-top: 0rem;
+    }
+
+    .time {
+      margin-bottom: 0.3rem;
+      font-size: 1.5rem;
+    }
 
     .day {
       font-size: 1.15rem;
-      text-transform: uppercase;
       margin-top: 0.4rem;
     }
   }
@@ -210,7 +282,7 @@ const StyledHome = styled.section`
     justify-content: space-between;
     align-items: center;
     margin-top: 4rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 
     h2 {
       margin: 0;

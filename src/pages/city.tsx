@@ -14,6 +14,7 @@ import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
 
 type QueryParams = {
   cityId: string | undefined;
+  isCurrentLocation?: boolean;
   isFavourite: boolean | undefined;
   lat: string | undefined;
   long: string | undefined;
@@ -42,7 +43,7 @@ export default function City() {
   }
 
   const toggleFavourite = async () => {
-    if (cityDetails.data) {
+    if (cityDetails.data && !queryParams.isCurrentLocation) {
       if (queryParams.isFavourite) {
         queryParams.isFavourite = false;
         await removeFavouriteCity(Number(queryParams.cityId));
@@ -92,7 +93,13 @@ export default function City() {
           </div>
 
           <div className="favourite" onClick={toggleFavourite}>
-            {queryParams.isFavourite ? <HiStar color="#faee1c" /> : <IoMdStarOutline />}
+            {queryParams.isCurrentLocation ? (
+              <HiStar color="#faee1c" />
+            ) : queryParams.isFavourite ? (
+              <HiStar color="#faee1c" />
+            ) : (
+              <IoMdStarOutline />
+            )}
           </div>
 
           <div>

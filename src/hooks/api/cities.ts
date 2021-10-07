@@ -25,6 +25,18 @@ export function useGetCities() {
   );
 }
 
+export function useCityByCoordinates(lat: string, long: string) {
+  return useQuery<AxiosResponse<CitiesResponse>, Error, City>(
+    ['city', 'coordinates', { lat, long }],
+    () => axiosCitiesClient.get('/v1/geo/cities', { params: { location: lat + long } }),
+    {
+      enabled: Boolean(lat && long),
+      select: response => response.data.data[0],
+      staleTime: ONE_HOUR_IN_MILLISECONDS,
+    }
+  );
+}
+
 export function useCityDetails(cityId: string = '') {
   return useQuery<AxiosResponse<CityResponse>, Error, City>(
     ['city', cityId],
