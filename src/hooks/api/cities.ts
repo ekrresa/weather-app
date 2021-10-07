@@ -26,12 +26,12 @@ export function useGetCities() {
 }
 
 export function useCityDetails(cityId: string = '') {
-  return useQuery<AxiosResponse<CityResponse>, Error, CityResponse>(
+  return useQuery<AxiosResponse<CityResponse>, Error, City>(
     ['city', cityId],
     () => axiosCitiesClient.get(`/v1/geo/cities/${cityId}`),
     {
       enabled: cityId.length > 0,
-      select: response => response.data,
+      select: response => response.data.data,
       staleTime: ONE_HOUR_IN_MILLISECONDS,
     }
   );

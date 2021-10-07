@@ -28,7 +28,7 @@ export function CityBlock({
   return (
     <StyledCityBlock
       isFavourite={isFavourite}
-      to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`}
+      to={`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}&isFavourite=${isFavourite}`}
     >
       <h3>{city.name}</h3>
 

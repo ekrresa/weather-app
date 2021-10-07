@@ -1,18 +1,36 @@
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
+import { HiStar } from 'react-icons/hi';
+import { IoMdStarOutline } from 'react-icons/io';
+import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
+import qs from 'query-string';
 import styled from 'styled-components';
 
 import { Header } from '../components/Header';
 import { useCityDetails } from '../hooks/api/cities';
 import { useCityWeather } from '../hooks/api/weather';
 import { Notes } from '../components/Notes';
+import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
+
+type QueryParams = {
+  cityId: string | undefined;
+  isFavourite: boolean | undefined;
+  lat: string | undefined;
+  long: string | undefined;
+};
 
 export default function City() {
-  const queryParams = new URLSearchParams(useLocation().search);
+  const history = useHistory();
+  const location = useLocation();
 
-  const cityDetails = useCityDetails(queryParams.get('cityId')!);
+  const queryParams = qs.parse(location.search, {
+    parseBooleans: true,
+  }) as QueryParams;
+
+  const queryClient = useQueryClient();
+  const cityDetails = useCityDetails(queryParams.cityId);
   const weatherDetails = useCityWeather({
-    coords: queryParams.get('lat')! + ',' + queryParams.get('long')!,
+    coords: queryParams.lat + ',' + queryParams.long,
   });
 
   if (cityDetails.isLoading || weatherDetails.isLoading) {
@@ -23,6 +41,21 @@ export default function City() {
     return <div>There was an error</div>;
   }
 
+  const toggleFavourite = async () => {
+    if (cityDetails.data) {
+      if (queryParams.isFavourite) {
+        queryParams.isFavourite = false;
+        await removeFavouriteCity(Number(queryParams.cityId));
+      } else {
+        queryParams.isFavourite = true;
+        await saveFavouriteCity(cityDetails.data);
+      }
+
+      history.push(`${location.pathname}?${qs.stringify(queryParams)}`);
+      queryClient.invalidateQueries(['cities', 'favourite']);
+    }
+  };
+
   return (
     <StyledCity>
       <Header />
@@ -30,7 +63,7 @@ export default function City() {
       <main className="container">
         <div className="header">
           <h1>
-            {cityDetails.data?.data.city}, {cityDetails.data?.data.country}
+            {cityDetails.data?.city}, {cityDetails.data?.country}
           </h1>
           <div className="time">
             {format(new Date(weatherDetails.data?.location.localtime!), 'h:mm b')}
@@ -58,7 +91,11 @@ export default function City() {
             </div>
           </div>
 
-          <div className="">
+          <div className="favourite" onClick={toggleFavourite}>
+            {queryParams.isFavourite ? <HiStar color="#faee1c" /> : <IoMdStarOutline />}
+          </div>
+
+          <div>
             <img
               className="weather__icon"
               src={weatherDetails.data?.current.weather_icons[0]}
@@ -93,7 +130,7 @@ export default function City() {
           </div>
         </section>
 
-        <Notes cityId={queryParams.get('cityId')!} />
+        <Notes cityId={queryParams.cityId!} />
       </main>
     </StyledCity>
   );
@@ -143,6 +180,15 @@ const StyledCity = styled.section`
     .showcase__left {
       display: flex;
       flex-direction: column;
+    }
+
+    .favourite {
+      align-self: baseline;
+      cursor: pointer;
+
+      svg {
+        font-size: 1.3rem;
+      }
     }
 
     .temperature {
