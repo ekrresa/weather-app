@@ -1,4 +1,4 @@
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { GoPencil } from 'react-icons/go';
 import { sanitize } from 'dompurify';
@@ -11,6 +11,8 @@ import { Modal } from './Modal';
 
 export function Notes({ cityId }: { cityId: string }) {
   const textAreaRef = useRef();
+  const formRef = useRef<HTMLFormElement>(null);
+
   const [modalOpen, setModalOpen] = useState({ state: false, content: '' });
   const [noteId, setNoteId] = useState('');
   const [formState, toggleForm] = useState(false);
@@ -19,6 +21,20 @@ export function Notes({ cityId }: { cityId: string }) {
   const queryClient = useQueryClient();
   const notes = useNotesQuery(cityId);
   const notesRequest = useMutation((data: string) => saveNotes(cityId, data));
+
+  useEffect(() => {
+    if (formState && formRef?.current) {
+      formRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest',
+      });
+    }
+  }, [formState]);
+
+  const handleFormToggle = () => {
+    toggleForm(!formState);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -55,13 +71,13 @@ export function Notes({ cityId }: { cityId: string }) {
 
       <div className="notes__header">
         <h3>Notes</h3>
-        <span onClick={() => toggleForm(!formState)}>
+        <span onClick={handleFormToggle}>
           <GoPencil />
         </span>
       </div>
 
       {formState && (
-        <form className="notes__form" onSubmit={handleSubmit}>
+        <form ref={formRef} className="notes__form" onSubmit={handleSubmit}>
           <TextArea onChange={val => setNote(val)} ref={textAreaRef} />
           <button>save</button>
         </form>

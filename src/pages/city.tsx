@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import styled from 'styled-components';
@@ -166,7 +165,7 @@ const StyledCity = styled.section`
     }
     .weather__description {
       font-weight: 500;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
       max-width: 12rem;
       text-align: end;
       line-height: 1.4;
