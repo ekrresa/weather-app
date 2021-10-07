@@ -1,6 +1,6 @@
 import { useHistory, useLocation } from 'react-router-dom';
 import { HiStar } from 'react-icons/hi';
-import { IoMdStarOutline } from 'react-icons/io';
+import { IoIosArrowBack, IoMdStarOutline } from 'react-icons/io';
 import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import qs from 'query-string';
@@ -63,6 +63,11 @@ export default function City() {
 
       <main className="container">
         <div className="header">
+          <div className="back" onClick={() => history.push('/')}>
+            <IoIosArrowBack />
+            <span>Back</span>
+          </div>
+
           <h1>
             {cityDetails.data?.city}, {cityDetails.data?.country}
           </h1>
@@ -158,6 +163,14 @@ const StyledCity = styled.section`
       font-size: 2.4rem;
       font-weight: 500;
       margin-bottom: 0.4rem;
+    }
+    .back {
+      display: flex;
+      cursor: pointer;
+
+      svg {
+        font-size: 1.15rem;
+      }
     }
     .day {
       margin-bottom: 0.3rem;
