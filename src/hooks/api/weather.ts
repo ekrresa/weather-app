@@ -5,7 +5,7 @@ import { axiosWeatherClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
 
-export function useGetCityWeather(locations: WeatherKey[]) {
+export function useCitiesWeather(locations: WeatherKey[]) {
   return useQueries(
     locations.map(location => ({
       queryKey: ['weather', { coords: location.coords }],

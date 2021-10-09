@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -40,6 +41,7 @@ ReactDOM.render(
         </QueryClientProvider>
       </HelmetProvider>
     </Router>
+    <Toaster />
   </React.StrictMode>,
   document.getElementById('root')
 );
