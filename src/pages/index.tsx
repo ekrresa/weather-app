@@ -76,8 +76,8 @@ export default function Home() {
   }, [history, userCity.data, userCoords.lat, userCoords.long]);
 
   const geoPosition = (position: GeolocationPosition) => {
-    const latitudeSign = position.coords.latitude < 0 ? '-' : '+';
-    const longitudeSign = position.coords.longitude < 0 ? '-' : '+';
+    const latitudeSign = position.coords.latitude < 0 ? '' : '+';
+    const longitudeSign = position.coords.longitude < 0 ? '' : '+';
 
     setUserCoords({
       lat: latitudeSign + String(position.coords.latitude),
@@ -101,7 +101,6 @@ export default function Home() {
         </span>
       );
     }
-    console.log(error);
   };
 
   const handleSelect = (city: City | null | undefined) => {
