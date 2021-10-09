@@ -4,7 +4,6 @@ import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import arrayDiff from 'lodash.differencewith';
 import localforage from 'localforage';
-import toast from 'react-hot-toast';
 import styled, { css } from 'styled-components';
 
 import {
@@ -22,6 +21,7 @@ import { extractCoordinates } from '../helpers';
 import { City } from '../types';
 import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
 import { Loader } from '../components/Loader';
+import { geoPosition, geoPositionError } from '../helpers/geo';
 
 export default function Home() {
   const history = useHistory();
@@ -58,11 +58,15 @@ export default function Home() {
 
   useEffect(() => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(geoPosition, geoPositionError);
+      navigator.geolocation.getCurrentPosition(
+        position => geoPosition(position, setUserCoords),
+        geoPositionError
+      );
     }
   }, []);
 
   useEffect(() => {
+    // Ensures routing to city page happens only once after location permission is granted
     (async function () {
       const LOCATION_PERMISSION_GRANTED = await localforage.getItem('PERMISSION_GRANTED');
 
@@ -75,34 +79,6 @@ export default function Home() {
       }
     })();
   }, [history, userCity.data, userCoords.lat, userCoords.long]);
-
-  const geoPosition = (position: GeolocationPosition) => {
-    const latitudeSign = position.coords.latitude < 0 ? '' : '+';
-    const longitudeSign = position.coords.longitude < 0 ? '' : '+';
-
-    setUserCoords({
-      lat: latitudeSign + String(position.coords.latitude),
-      long: longitudeSign + String(position.coords.longitude),
-    });
-  };
-
-  const geoPositionError = (error: GeolocationPositionError) => {
-    if (error.code === 1 || error.code === 3) {
-      toast.error(
-        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-          Please enable your location and refresh the page to view weather details for it.
-        </span>
-      );
-    }
-
-    if (error.code === 0 || error.code === 2) {
-      toast.error(
-        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-          Unable to access your location. Please check your internet connection.
-        </span>
-      );
-    }
-  };
 
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
@@ -143,6 +119,16 @@ export default function Home() {
 
   if (cities.isLoading) {
     return <Loader />;
+  }
+
+  if (cities.isError) {
+    return (
+      <StyledHome>
+        <Header />
+
+        <div className=""></div>
+      </StyledHome>
+    );
   }
 
   return (
@@ -218,7 +204,7 @@ export default function Home() {
   );
 }
 
-const StyledHome = styled.section<{ isUserCity: boolean }>`
+const StyledHome = styled.section<{ isUserCity?: boolean }>`
   .header {
     background: #1e213a;
 
