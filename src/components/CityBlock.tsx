@@ -1,3 +1,5 @@
+import { SyntheticEvent } from 'react';
+import { UseQueryResult } from 'react-query';
 import { Link } from 'react-router-dom';
 import { BiTrash } from 'react-icons/bi';
 import { IoMdStarOutline } from 'react-icons/io';
@@ -6,8 +8,6 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import styled, { css } from 'styled-components';
 
 import { City, WeatherResponse } from '../types';
-import { UseQueryResult } from 'react-query';
-import { SyntheticEvent } from 'react';
 import { useTemperatureContext } from '../common/temperatureContext';
 import { convertFahrenheitToCelsius } from '../helpers';
 
