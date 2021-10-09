@@ -241,6 +241,7 @@ const StyledCity = styled.section`
       font-size: 2.4rem;
       font-weight: 500;
       margin-bottom: 0.4rem;
+      text-align: center;
     }
     .back {
       display: flex;

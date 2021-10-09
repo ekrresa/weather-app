@@ -73,7 +73,9 @@ export function CityBlock({
             &#186;
             <span>{temperatureCtx.unit === 'fahrenheit' ? 'F' : 'C'}</span>
           </p>
-          <p className="summary">{weather?.data?.current?.weather_descriptions[0]}</p>
+          <p className="summary" title={weather?.data?.current?.weather_descriptions[0]}>
+            {weather?.data?.current?.weather_descriptions[0]}
+          </p>
         </>
       ) : (
         <span style={{ marginTop: 'auto' }}>
@@ -170,5 +172,9 @@ const StyledCityBlock = styled(Link)<{ isFavourite: boolean }>`
     font-size: 0.8rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
