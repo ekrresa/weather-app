@@ -7,7 +7,7 @@ import qs from 'query-string';
 import styled from 'styled-components';
 
 import { Header } from '../components/Header';
-import { useCityDetails } from '../hooks/api/cities';
+import { citiesKeyFactory, useCityDetails } from '../hooks/api/cities';
 import { useCityWeather } from '../hooks/api/weather';
 import { Notes } from '../components/Notes';
 import { Loader } from '../components/Loader';
@@ -49,7 +49,7 @@ export default function City() {
       }
 
       history.push(`${location.pathname}?${qs.stringify(queryParams)}`);
-      queryClient.invalidateQueries(['cities', 'favourite']);
+      queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
     }
   };
 

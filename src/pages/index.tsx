@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import styled, { css } from 'styled-components';
 
 import {
+  citiesKeyFactory,
   useCityByCoordinates,
   useCitySearch,
   useFavouriteCitiesQuery,
@@ -125,7 +126,7 @@ export default function Home() {
         [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
       );
       await removeFavouriteCity(cityId);
-      await queryClient.invalidateQueries(['cities', 'favourite']);
+      await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
     }
   };
 
@@ -137,7 +138,7 @@ export default function Home() {
 
     setSortedCities(remainCities);
     await saveFavouriteCity(favCity);
-    await queryClient.invalidateQueries(['cities', 'favourite']);
+    await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
   };
 
   if (cities.isLoading) {

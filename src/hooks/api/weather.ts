@@ -6,10 +6,14 @@ import { axiosWeatherClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
 
+export const weatherKeyFactory = {
+  weatherByCoordinates: (coordinates: string) => ['weather', 'coordinates', coordinates],
+};
+
 export function useCitiesWeather(locations: WeatherKey[]) {
   return useQueries(
     locations.map(location => ({
-      queryKey: ['weather', { coords: location.coords }],
+      queryKey: weatherKeyFactory.weatherByCoordinates(location.coords),
       queryFn: (): Promise<AxiosResponse<WeatherResponse>> =>
         axiosWeatherClient.get('/current', {
           params: {
@@ -31,7 +35,7 @@ export function useCityWeather(location: WeatherKey) {
     AxiosError<WeatherAPIError>,
     WeatherResponse
   >(
-    ['weather', { coords: location.coords }],
+    weatherKeyFactory.weatherByCoordinates(location.coords),
     () =>
       axiosWeatherClient.get('/current', {
         params: {

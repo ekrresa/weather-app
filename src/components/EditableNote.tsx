@@ -5,7 +5,7 @@ import { sanitize } from 'dompurify';
 import styled from 'styled-components';
 
 import { TextArea } from './TextArea';
-import { useNotesQuery } from '../hooks/api/notes';
+import { notesKeyFactory, useNotesQuery } from '../hooks/api/notes';
 import { Note } from '../types';
 import { editNotes } from '../helpers/notes';
 
@@ -37,7 +37,7 @@ export function EditableNote({ cityId, note }: EditableNoteProps) {
         console.error(err);
       },
       onSuccess: async () => {
-        await queryClient.invalidateQueries(['notes', cityId]);
+        await queryClient.invalidateQueries(notesKeyFactory.notesOfACity(cityId));
         setEditMode(false);
       },
     });

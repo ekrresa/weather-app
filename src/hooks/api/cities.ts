@@ -7,13 +7,21 @@ import { axiosCitiesClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
 
+export const citiesKeyFactory = {
+  allCities: () => ['cities'] as const,
+  cityDetails: (cityId: string) => ['cities', 'details', cityId],
+  cityByCoordinates: (lat: string, long: string) => ['cities', 'details', lat, long],
+  citySearch: (cityName: string) => ['cities', 'search', cityName],
+  favouriteCities: () => ['cities', 'favourite'],
+};
+
 export function useGetCities() {
   return useQuery<
     AxiosResponse<CitiesResponse>,
     AxiosError<CitiesAPIError>,
     CitiesResponse
   >(
-    ['cities'],
+    citiesKeyFactory.allCities(),
     () =>
       axiosCitiesClient.get('/v1/geo/cities', {
         params: {
@@ -32,7 +40,7 @@ export function useGetCities() {
 
 export function useCityByCoordinates(lat: string, long: string) {
   return useQuery<AxiosResponse<CitiesResponse>, AxiosError<CitiesAPIError>, City>(
-    ['city', 'coordinates', { lat, long }],
+    citiesKeyFactory.cityByCoordinates(lat, long),
     () => axiosCitiesClient.get('/v1/geo/cities', { params: { location: lat + long } }),
     {
       enabled: Boolean(lat && long),
@@ -44,7 +52,7 @@ export function useCityByCoordinates(lat: string, long: string) {
 
 export function useCityDetails(cityId: string = '') {
   return useQuery<AxiosResponse<CityResponse>, AxiosError<CitiesAPIError>, City>(
-    ['city', cityId],
+    citiesKeyFactory.cityDetails(cityId),
     () => axiosCitiesClient.get(`/v1/geo/cities/${cityId}`),
     {
       enabled: cityId.length > 0,
@@ -56,7 +64,7 @@ export function useCityDetails(cityId: string = '') {
 
 export function useCitySearch(cityName: string = '') {
   return useQuery<AxiosResponse<CitiesResponse>, AxiosError<CitiesAPIError>, City[]>(
-    ['city', 'search', cityName],
+    citiesKeyFactory.citySearch(cityName),
     () =>
       axiosCitiesClient.get(`/v1/geo/cities`, {
         params: { limit: 30, namePrefix: cityName },
@@ -71,7 +79,7 @@ export function useCitySearch(cityName: string = '') {
 
 export function useFavouriteCitiesQuery() {
   return useQuery<City[], AxiosError<CitiesAPIError>>(
-    ['cities', 'favourite'],
+    citiesKeyFactory.favouriteCities(),
     () => getFavouriteCities(),
     {
       staleTime: Infinity,
