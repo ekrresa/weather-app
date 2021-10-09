@@ -16,5 +16,6 @@ export const axiosWeatherClient = axios.create({
   cancelToken: source.token,
   params: {
     access_key: process.env.REACT_APP_WEATHER_API_KEY,
+    units: 'f',
   },
 });

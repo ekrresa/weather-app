@@ -8,6 +8,8 @@ import styled, { css } from 'styled-components';
 import { City, WeatherResponse } from '../types';
 import { UseQueryResult } from 'react-query';
 import { SyntheticEvent } from 'react';
+import { useTemperatureContext } from '../common/temperatureContext';
+import { convertFahrenheitToCelsius } from '../helpers';
 
 type CityBlockProps = {
   city: City;
@@ -26,6 +28,8 @@ export function CityBlock({
   setFavourite,
   weather,
 }: CityBlockProps) {
+  const temperatureCtx = useTemperatureContext();
+
   return (
     <StyledCityBlock
       isFavourite={isFavourite}
@@ -61,9 +65,13 @@ export function CityBlock({
       {weather?.isSuccess && weather?.data ? (
         <>
           <p className="temp">
-            <span className="value">{weather.data?.current?.temperature}</span>
+            <span className="value">
+              {temperatureCtx.unit === 'celsius'
+                ? convertFahrenheitToCelsius(weather.data?.current?.temperature)
+                : weather.data?.current?.temperature}
+            </span>
             &#186;
-            <span>C</span>
+            <span>{temperatureCtx.unit === 'fahrenheit' ? 'F' : 'C'}</span>
           </p>
           <p className="summary">{weather?.data?.current?.weather_descriptions[0]}</p>
         </>

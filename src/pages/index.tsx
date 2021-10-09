@@ -14,7 +14,7 @@ import {
   useGetCities,
 } from '../hooks/api/cities';
 import { useCitiesWeather, useCityWeather } from '../hooks/api/weather';
-import { CityBlock } from '../components/City';
+import { CityBlock } from '../components/CityBlock';
 import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';

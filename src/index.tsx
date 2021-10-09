@@ -11,6 +11,7 @@ import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { TemperatureProvider } from './common/temperatureContext';
 
 const ONE_DAY_IN_MILLISECONDS = 86_400_000;
 
@@ -36,7 +37,9 @@ ReactDOM.render(
     <Router>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <TemperatureProvider>
+            <App />
+          </TemperatureProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </HelmetProvider>

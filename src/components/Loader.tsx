@@ -4,7 +4,7 @@ import styled from 'styled-components';
 export function Loader() {
   return (
     <StyledLoader>
-      <ClipLoader color="#f3558e" size={80} />
+      <ClipLoader color="#b179d4" size={80} />
     </StyledLoader>
   );
 }
