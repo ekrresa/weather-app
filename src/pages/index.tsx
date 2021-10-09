@@ -4,10 +4,10 @@ import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import arrayDiff from 'lodash.differencewith';
 import localforage from 'localforage';
-import toast from 'react-hot-toast';
 import styled, { css } from 'styled-components';
 
 import {
+  citiesKeyFactory,
   useCityByCoordinates,
   useCitySearch,
   useFavouriteCitiesQuery,
@@ -19,8 +19,14 @@ import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';
 import { City } from '../types';
-import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
+import {
+  removeFavouriteCity,
+  saveFavouriteCity,
+  saveDeletedCities,
+  getDeletedCities,
+} from '../helpers/cities';
 import { Loader } from '../components/Loader';
+import { geoPosition, geoPositionError } from '../helpers/geo';
 
 export default function Home() {
   const history = useHistory();
@@ -41,27 +47,46 @@ export default function Home() {
   const userCity = useCityByCoordinates(userCoords.lat, userCoords.long);
 
   useEffect(() => {
-    if (cities.data && favouriteCities.data) {
-      const str = extractCoordinates(cities.data.data);
-      const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
-      const notFavouriteCities = arrayDiff(
-        sortedCities,
-        favouriteCities.data,
-        (a, b) => a.id === b.id
-      );
+    (async function () {
+      if (cities.data && favouriteCities.data) {
+        const str = extractCoordinates(cities.data.data);
+        const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
+        const notFavouriteCities = arrayDiff(
+          sortedCities,
+          favouriteCities.data,
+          (a, b) => a.id === b.id
+        );
 
-      setLocations(str);
-      setSortedCities(notFavouriteCities);
-    }
+        const deletedCities = await getDeletedCities();
+
+        if (deletedCities) {
+          const notDeletedCities = arrayDiff(
+            notFavouriteCities,
+            deletedCities,
+            (a, b) => a.id === b.id
+          );
+
+          setSortedCities(notDeletedCities);
+        } else {
+          setSortedCities(notFavouriteCities);
+        }
+
+        setLocations(str);
+      }
+    })();
   }, [cities.data, favouriteCities.data]);
 
   useEffect(() => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(geoPosition, geoPositionError);
+      navigator.geolocation.getCurrentPosition(
+        position => geoPosition(position, setUserCoords),
+        geoPositionError
+      );
     }
   }, []);
 
   useEffect(() => {
+    // Ensures routing to city page happens only once after location permission is granted
     (async function () {
       const LOCATION_PERMISSION_GRANTED = await localforage.getItem('PERMISSION_GRANTED');
 
@@ -75,44 +100,23 @@ export default function Home() {
     })();
   }, [history, userCity.data, userCoords.lat, userCoords.long]);
 
-  const geoPosition = (position: GeolocationPosition) => {
-    const latitudeSign = position.coords.latitude < 0 ? '' : '+';
-    const longitudeSign = position.coords.longitude < 0 ? '' : '+';
-
-    setUserCoords({
-      lat: latitudeSign + String(position.coords.latitude),
-      long: longitudeSign + String(position.coords.longitude),
-    });
-  };
-
-  const geoPositionError = (error: GeolocationPositionError) => {
-    if (error.code === 1 || error.code === 3) {
-      toast.error(
-        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-          Please enable your location and refresh the page to view weather details for it.
-        </span>
-      );
-    }
-
-    if (error.code === 0 || error.code === 2) {
-      toast.error(
-        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-          Unable to access your location. Please check your internet connection.
-        </span>
-      );
-    }
-  };
-
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
-      history.push(`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`);
+      history.push(
+        `/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}&isFavourite=false`
+      );
     }
   };
 
   const removeCity = (e: SyntheticEvent, cityId: number) => {
     e.preventDefault();
 
-    setSortedCities(sortedCities.filter(city => city.id !== cityId));
+    const deletedCity = cities.data?.data.find(city => city.id === cityId);
+
+    if (deletedCity) {
+      setSortedCities(sortedCities.filter(city => city.id !== cityId));
+      saveDeletedCities(deletedCity);
+    }
   };
 
   const removeFavourite = async (e: SyntheticEvent, cityId: number) => {
@@ -124,9 +128,10 @@ export default function Home() {
       setSortedCities(
         [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
       );
-      await removeFavouriteCity(cityId);
-      await queryClient.invalidateQueries(['cities', 'favourite']);
     }
+
+    await removeFavouriteCity(cityId);
+    await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
   };
 
   const setFavourite = async (e: SyntheticEvent, cityId: number) => {
@@ -137,11 +142,26 @@ export default function Home() {
 
     setSortedCities(remainCities);
     await saveFavouriteCity(favCity);
-    await queryClient.invalidateQueries(['cities', 'favourite']);
+    await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
   };
 
   if (cities.isLoading) {
     return <Loader />;
+  }
+
+  if (cities.isError) {
+    const citiesErrorMessage =
+      cities.error.response?.data.errors[0].message || cities.error.message;
+
+    return (
+      <StyledHome>
+        <Header />
+
+        <div className="errorWrapper">
+          <div>{citiesErrorMessage}</div>
+        </div>
+      </StyledHome>
+    );
   }
 
   return (
@@ -158,10 +178,14 @@ export default function Home() {
           }
         }}
       >
-        {userCity.isSuccess && (
+        {userCity.isSuccess ? (
           <h1>
             {userCity.data?.city}, {userCity.data?.country}
           </h1>
+        ) : (
+          <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+            Error fetching current location. Please reload.
+          </div>
         )}
         <div className="time">{format(new Date(), 'h:mm b')}</div>
         <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
@@ -217,7 +241,13 @@ export default function Home() {
   );
 }
 
-const StyledHome = styled.section<{ isUserCity: boolean }>`
+const StyledHome = styled.section<{ isUserCity?: boolean }>`
+  .errorWrapper {
+    margin-top: 5rem;
+    text-align: center;
+    font-weight: 500;
+  }
+
   .header {
     background: #1e213a;
 

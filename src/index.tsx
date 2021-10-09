@@ -27,10 +27,10 @@ const queryClient = new QueryClient({
   },
 });
 
-// persistQueryClient({
-//   persistor: localStoragePersistor,
-//   queryClient,
-// });
+persistQueryClient({
+  persistor: localStoragePersistor,
+  queryClient,
+});
 
 ReactDOM.render(
   <React.StrictMode>

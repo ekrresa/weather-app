@@ -7,7 +7,7 @@ import styled from 'styled-components';
 
 import { TextArea } from './TextArea';
 import { deleteNote, generateId, saveNote } from '../helpers/notes';
-import { useNotesQuery } from '../hooks/api/notes';
+import { notesKeyFactory, useNotesQuery } from '../hooks/api/notes';
 import { Modal } from './Modal';
 import { EditableNote } from './EditableNote';
 import { Note } from '../types';
@@ -49,7 +49,7 @@ export function Notes({ cityId }: { cityId: string }) {
     e.stopPropagation();
 
     await deleteNote(cityId, noteId);
-    await queryClient.invalidateQueries(['notes', cityId]);
+    await queryClient.invalidateQueries(notesKeyFactory.notesOfACity(cityId));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -62,7 +62,7 @@ export function Notes({ cityId }: { cityId: string }) {
     const newNote = { id: generateId(), content: sanitize(note) };
 
     await saveNote(cityId, newNote);
-    await queryClient.invalidateQueries(['notes', cityId]);
+    await queryClient.invalidateQueries(notesKeyFactory.notesOfACity(cityId));
 
     if (textAreaRef && textAreaRef.current) {
       //@ts-expect-error

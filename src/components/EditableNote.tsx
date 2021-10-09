@@ -1,11 +1,12 @@
 import { SyntheticEvent, useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { IoPencil } from 'react-icons/io5';
 import { sanitize } from 'dompurify';
+import { toast } from 'react-hot-toast';
 import styled from 'styled-components';
 
 import { TextArea } from './TextArea';
-import { useNotesQuery } from '../hooks/api/notes';
+import { notesKeyFactory, useNotesQuery } from '../hooks/api/notes';
 import { Note } from '../types';
 import { editNotes } from '../helpers/notes';
 
@@ -20,27 +21,26 @@ export function EditableNote({ cityId, note }: EditableNoteProps) {
 
   const queryClient = useQueryClient();
   const notes = useNotesQuery(cityId);
-  const notesRequest = useMutation((data: Note[]) => editNotes(cityId, data));
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
 
-    const newNotes = notes.data?.map(storedNote => {
-      if (storedNote.id === note.id) {
-        storedNote.content = sanitize(editedNote);
-      }
-      return storedNote;
-    });
+    if (notes.data) {
+      const newNotes = notes.data.map(storedNote => {
+        if (storedNote.id === note.id) {
+          storedNote.content = sanitize(editedNote);
+        }
+        return storedNote;
+      });
 
-    notesRequest.mutate(newNotes!, {
-      onError: err => {
-        console.error(err);
-      },
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(['notes', cityId]);
+      try {
+        await editNotes(cityId, newNotes);
+        await queryClient.invalidateQueries(notesKeyFactory.notesOfACity(cityId));
         setEditMode(false);
-      },
-    });
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    }
   };
 
   return (
