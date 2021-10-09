@@ -1,6 +1,7 @@
-import { AxiosResponse } from 'axios';
+import { AxiosResponse, AxiosError } from 'axios';
 import { useQueries, useQuery, UseQueryResult } from 'react-query';
-import { WeatherKey, WeatherResponse } from '../../types';
+
+import { WeatherAPIError, WeatherKey, WeatherResponse } from '../../types';
 import { axiosWeatherClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
@@ -21,11 +22,15 @@ export function useCitiesWeather(locations: WeatherKey[]) {
       }),
       staleTime: ONE_HOUR_IN_MILLISECONDS,
     }))
-  ) as UseQueryResult<WeatherResponse, Error>[];
+  ) as UseQueryResult<WeatherResponse, AxiosError<WeatherAPIError>>[];
 }
 
 export function useCityWeather(location: WeatherKey) {
-  return useQuery<AxiosResponse<WeatherResponse>, Error, WeatherResponse>(
+  return useQuery<
+    AxiosResponse<WeatherResponse>,
+    AxiosError<WeatherAPIError>,
+    WeatherResponse
+  >(
     ['weather', { coords: location.coords }],
     () =>
       axiosWeatherClient.get('/current', {

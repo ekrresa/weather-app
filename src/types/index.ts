@@ -7,6 +7,19 @@ export type CityResponse = {
   data: City;
 };
 
+export type CitiesAPIError = {
+  errors: Array<{ code: string; message: string }>;
+};
+
+export type WeatherAPIError = {
+  success: boolean;
+  error: {
+    code: number;
+    type: string;
+    info: string;
+  };
+};
+
 export type City = {
   id: number;
   wikiDataId: string;
