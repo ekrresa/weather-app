@@ -189,11 +189,11 @@ export default function Home() {
           <h1>
             {userCity.data?.city}, {userCity.data?.country}
           </h1>
-        ) : (
+        ) : userCity.isError ? (
           <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>
             Error fetching current location. Please reload.
           </div>
-        )}
+        ) : null}
         <div className="time">{format(new Date(), 'h:mm b')}</div>
         <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
         {userCityWeatherDetails.isSuccess && (
