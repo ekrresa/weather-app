@@ -19,7 +19,12 @@ import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';
 import { City } from '../types';
-import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
+import {
+  removeFavouriteCity,
+  saveFavouriteCity,
+  saveDeletedCities,
+  getDeletedCities,
+} from '../helpers/cities';
 import { Loader } from '../components/Loader';
 import { geoPosition, geoPositionError } from '../helpers/geo';
 
@@ -42,18 +47,33 @@ export default function Home() {
   const userCity = useCityByCoordinates(userCoords.lat, userCoords.long);
 
   useEffect(() => {
-    if (cities.data && favouriteCities.data) {
-      const str = extractCoordinates(cities.data.data);
-      const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
-      const notFavouriteCities = arrayDiff(
-        sortedCities,
-        favouriteCities.data,
-        (a, b) => a.id === b.id
-      );
+    (async function () {
+      if (cities.data && favouriteCities.data) {
+        const str = extractCoordinates(cities.data.data);
+        const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
+        const notFavouriteCities = arrayDiff(
+          sortedCities,
+          favouriteCities.data,
+          (a, b) => a.id === b.id
+        );
 
-      setLocations(str);
-      setSortedCities(notFavouriteCities);
-    }
+        const deletedCities = await getDeletedCities();
+
+        if (deletedCities) {
+          const notDeletedCities = arrayDiff(
+            notFavouriteCities,
+            deletedCities,
+            (a, b) => a.id === b.id
+          );
+
+          setSortedCities(notDeletedCities);
+        } else {
+          setSortedCities(notFavouriteCities);
+        }
+
+        setLocations(str);
+      }
+    })();
   }, [cities.data, favouriteCities.data]);
 
   useEffect(() => {
@@ -82,14 +102,21 @@ export default function Home() {
 
   const handleSelect = (city: City | null | undefined) => {
     if (city) {
-      history.push(`/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}`);
+      history.push(
+        `/city?cityId=${city.id}&lat=${city.latitude}&long=${city.longitude}&isFavourite=false`
+      );
     }
   };
 
   const removeCity = (e: SyntheticEvent, cityId: number) => {
     e.preventDefault();
 
-    setSortedCities(sortedCities.filter(city => city.id !== cityId));
+    const deletedCity = cities.data?.data.find(city => city.id === cityId);
+
+    if (deletedCity) {
+      setSortedCities(sortedCities.filter(city => city.id !== cityId));
+      saveDeletedCities(deletedCity);
+    }
   };
 
   const removeFavourite = async (e: SyntheticEvent, cityId: number) => {
@@ -101,9 +128,10 @@ export default function Home() {
       setSortedCities(
         [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
       );
-      await removeFavouriteCity(cityId);
-      await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
     }
+
+    await removeFavouriteCity(cityId);
+    await queryClient.invalidateQueries(citiesKeyFactory.favouriteCities());
   };
 
   const setFavourite = async (e: SyntheticEvent, cityId: number) => {
@@ -122,11 +150,16 @@ export default function Home() {
   }
 
   if (cities.isError) {
+    const citiesErrorMessage =
+      cities.error.response?.data.errors[0].message || cities.error.message;
+
     return (
       <StyledHome>
         <Header />
 
-        <div className=""></div>
+        <div className="errorWrapper">
+          <div>{citiesErrorMessage}</div>
+        </div>
       </StyledHome>
     );
   }
@@ -145,10 +178,14 @@ export default function Home() {
           }
         }}
       >
-        {userCity.isSuccess && (
+        {userCity.isSuccess ? (
           <h1>
             {userCity.data?.city}, {userCity.data?.country}
           </h1>
+        ) : (
+          <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+            Error fetching current location. Please reload.
+          </div>
         )}
         <div className="time">{format(new Date(), 'h:mm b')}</div>
         <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
@@ -205,6 +242,12 @@ export default function Home() {
 }
 
 const StyledHome = styled.section<{ isUserCity?: boolean }>`
+  .errorWrapper {
+    margin-top: 5rem;
+    text-align: center;
+    font-weight: 500;
+  }
+
   .header {
     background: #1e213a;
 

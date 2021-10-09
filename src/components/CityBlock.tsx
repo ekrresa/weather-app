@@ -77,6 +77,10 @@ export function CityBlock({
             {weather?.data?.current?.weather_descriptions[0]}
           </p>
         </>
+      ) : weather?.isError ? (
+        <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+          Error fetching current location. Please reload.
+        </div>
       ) : (
         <span style={{ marginTop: 'auto' }}>
           <ClipLoader color="#f3558e" size={15} />
