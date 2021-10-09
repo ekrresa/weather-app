@@ -1,6 +1,6 @@
 import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
-export type Temperature = {
+type Temperature = {
   unit: 'celsius' | 'fahrenheit';
   handleUnitChange: (unit: 'celsius' | 'fahrenheit') => void;
 };

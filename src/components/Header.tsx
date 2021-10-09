@@ -8,19 +8,21 @@ export function Header() {
   return (
     <StyledHeader unit={temperatureCtx.unit}>
       <div className="container wrapper">
-        <Link to="/" className="logo">
+        <Link to="/" className="logo" data-testid="logo">
           WeatherView
         </Link>
         <div className="temperature">
           <div
             className="fahrenheit"
             onClick={() => temperatureCtx.handleUnitChange('fahrenheit')}
+            data-testid="fahrenheit-btn"
           >
             &#186;<span>F</span>
           </div>
           <div
             className="celsius"
             onClick={() => temperatureCtx.handleUnitChange('celsius')}
+            data-testid="celsius-btn"
           >
             &#186;<span>C</span>
           </div>

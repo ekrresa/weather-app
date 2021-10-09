@@ -78,9 +78,16 @@ export default function Home() {
 
   useEffect(() => {
     if (navigator.geolocation) {
+      const FIVE_MINUTES = 5 * 60 * 1000;
+      const TEN_SECONDS = 10 * 1000;
+
       navigator.geolocation.getCurrentPosition(
         position => geoPosition(position, setUserCoords),
-        geoPositionError
+        geoPositionError,
+        {
+          maximumAge: FIVE_MINUTES,
+          timeout: TEN_SECONDS,
+        }
       );
     }
   }, []);

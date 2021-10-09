@@ -1,0 +1,72 @@
+[
+  {
+    "id": 3468960,
+    "wikiDataId": "Q5211016",
+    "type": "CITY",
+    "city": "Dalingshan",
+    "name": "Dalingshan",
+    "country": "People's Republic of China",
+    "countryCode": "CN",
+    "region": "Guangdong",
+    "regionCode": "GD",
+    "latitude": 22.9097,
+    "longitude": 113.83606,
+    "population": 0
+  },
+  {
+    "id": 3462373,
+    "wikiDataId": "Q8082992",
+    "type": "CITY",
+    "city": "Żabin, West Pomeranian Voivodeship",
+    "name": "Żabin, West Pomeranian Voivodeship",
+    "country": "Poland",
+    "countryCode": "PL",
+    "region": "West Pomeranian Voivodeship",
+    "regionCode": "ZP",
+    "latitude": 53.3856,
+    "longitude": 16.0894,
+    "population": 0
+  },
+  {
+    "id": 3448607,
+    "wikiDataId": "Q32166005",
+    "type": "CITY",
+    "city": "Mojotoro",
+    "name": "Mojotoro",
+    "country": "Bolivia",
+    "countryCode": "BO",
+    "region": "Chuquisaca Department",
+    "regionCode": "H",
+    "latitude": -18.90581,
+    "longitude": -65.14007,
+    "population": 0
+  },
+  {
+    "id": 3447003,
+    "wikiDataId": "Q7911856",
+    "type": "CITY",
+    "city": "Valle Alto",
+    "name": "Valle Alto",
+    "country": "Mexico",
+    "countryCode": "MX",
+    "region": "Nuevo León",
+    "regionCode": "NLE",
+    "latitude": 25.5667,
+    "longitude": -100.25,
+    "population": 0
+  },
+  {
+    "id": 3372864,
+    "wikiDataId": "Q7235134",
+    "type": "CITY",
+    "city": "Potrerillos, Mendoza",
+    "name": "Potrerillos, Mendoza",
+    "country": "Argentina",
+    "countryCode": "AR",
+    "region": "Mendoza",
+    "regionCode": "M",
+    "latitude": -32.95,
+    "longitude": -69.183,
+    "population": 0
+  }
+]
