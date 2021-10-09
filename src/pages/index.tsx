@@ -4,6 +4,7 @@ import { useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import arrayDiff from 'lodash.differencewith';
 import localforage from 'localforage';
+import toast from 'react-hot-toast';
 import styled, { css } from 'styled-components';
 
 import {
@@ -12,8 +13,8 @@ import {
   useFavouriteCitiesQuery,
   useGetCities,
 } from '../hooks/api/cities';
-import { useGetCityWeather } from '../hooks/api/weather';
-import { CityBlock } from '../components/City';
+import { useCitiesWeather, useCityWeather } from '../hooks/api/weather';
+import { CityBlock } from '../components/CityBlock';
 import { ComboBox } from '../components/ComboBox';
 import { Header } from '../components/Header';
 import { extractCoordinates } from '../helpers';
@@ -23,17 +24,20 @@ import { Loader } from '../components/Loader';
 
 export default function Home() {
   const history = useHistory();
+  const queryClient = useQueryClient();
 
   const [locations, setLocations] = useState<any[]>([]);
   const [sortedCities, setSortedCities] = useState<City[]>([]);
-  const [cityName, setCityName] = useState('');
+  const [citySearchTerm, setCitySearchTerm] = useState('');
   const [userCoords, setUserCoords] = useState({ lat: '', long: '' });
 
-  const queryClient = useQueryClient();
   const cities = useGetCities();
-  const weather = useGetCityWeather(locations);
+  const weather = useCitiesWeather(locations);
+  const userCityWeatherDetails = useCityWeather({
+    coords: userCoords.lat + ',' + userCoords.long,
+  });
   const favouriteCities = useFavouriteCitiesQuery();
-  const citySearch = useCitySearch(cityName);
+  const citySearch = useCitySearch(citySearchTerm);
   const userCity = useCityByCoordinates(userCoords.lat, userCoords.long);
 
   useEffect(() => {
@@ -72,8 +76,8 @@ export default function Home() {
   }, [history, userCity.data, userCoords.lat, userCoords.long]);
 
   const geoPosition = (position: GeolocationPosition) => {
-    const latitudeSign = position.coords.latitude < 0 ? '-' : '+';
-    const longitudeSign = position.coords.longitude < 0 ? '-' : '+';
+    const latitudeSign = position.coords.latitude < 0 ? '' : '+';
+    const longitudeSign = position.coords.longitude < 0 ? '' : '+';
 
     setUserCoords({
       lat: latitudeSign + String(position.coords.latitude),
@@ -82,7 +86,21 @@ export default function Home() {
   };
 
   const geoPositionError = (error: GeolocationPositionError) => {
-    console.log(error);
+    if (error.code === 1 || error.code === 3) {
+      toast.error(
+        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+          Please enable your location and refresh the page to view weather details for it.
+        </span>
+      );
+    }
+
+    if (error.code === 0 || error.code === 2) {
+      toast.error(
+        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+          Unable to access your location. Please check your internet connection.
+        </span>
+      );
+    }
   };
 
   const handleSelect = (city: City | null | undefined) => {
@@ -147,6 +165,11 @@ export default function Home() {
         )}
         <div className="time">{format(new Date(), 'h:mm b')}</div>
         <div className="day">{format(new Date(), 'EEEE, MMMM do')}</div>
+        {userCityWeatherDetails.isSuccess && (
+          <div className="weather__description">
+            {userCityWeatherDetails.data?.current?.weather_descriptions[0]}
+          </div>
+        )}
       </div>
 
       <section className="container">
@@ -157,7 +180,7 @@ export default function Home() {
             data={citySearch.data}
             isError={citySearch.isError}
             loading={citySearch.isLoading}
-            onChange={val => setCityName(val)}
+            onChange={val => setCitySearchTerm(val)}
             selectCity={handleSelect}
           />
         </div>
@@ -268,15 +291,19 @@ const StyledHome = styled.section<{ isUserCity: boolean }>`
       margin-bottom: 0.5rem;
       margin-top: 0rem;
     }
-
     .time {
       margin-bottom: 0.3rem;
       font-size: 1.5rem;
     }
-
     .day {
       font-size: 1.15rem;
       margin-top: 0.4rem;
+    }
+    .weather__description {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
     }
   }
 

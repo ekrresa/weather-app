@@ -5,3 +5,7 @@ export function extractCoordinates(locations: City[]) {
     return { cityId: id, coords: latitude + ',' + longitude };
   });
 }
+
+export function convertFahrenheitToCelsius(fahrenheit: number) {
+  return Math.round((fahrenheit - 32) * (5 / 9));
+}

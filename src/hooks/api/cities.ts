@@ -1,13 +1,18 @@
-import { AxiosResponse } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import { useQuery } from 'react-query';
+
 import { getFavouriteCities } from '../../helpers/cities';
-import { CitiesResponse, City, CityResponse } from '../../types';
+import { CitiesAPIError, CitiesResponse, City, CityResponse } from '../../types';
 import { axiosCitiesClient } from '../../utils/axios';
 
 const ONE_HOUR_IN_MILLISECONDS = 3_600_000;
 
 export function useGetCities() {
-  return useQuery<AxiosResponse<CitiesResponse>, Error, CitiesResponse>(
+  return useQuery<
+    AxiosResponse<CitiesResponse>,
+    AxiosError<CitiesAPIError>,
+    CitiesResponse
+  >(
     ['cities'],
     () =>
       axiosCitiesClient.get('/v1/geo/cities', {
@@ -26,7 +31,7 @@ export function useGetCities() {
 }
 
 export function useCityByCoordinates(lat: string, long: string) {
-  return useQuery<AxiosResponse<CitiesResponse>, Error, City>(
+  return useQuery<AxiosResponse<CitiesResponse>, AxiosError<CitiesAPIError>, City>(
     ['city', 'coordinates', { lat, long }],
     () => axiosCitiesClient.get('/v1/geo/cities', { params: { location: lat + long } }),
     {
@@ -38,7 +43,7 @@ export function useCityByCoordinates(lat: string, long: string) {
 }
 
 export function useCityDetails(cityId: string = '') {
-  return useQuery<AxiosResponse<CityResponse>, Error, City>(
+  return useQuery<AxiosResponse<CityResponse>, AxiosError<CitiesAPIError>, City>(
     ['city', cityId],
     () => axiosCitiesClient.get(`/v1/geo/cities/${cityId}`),
     {
@@ -50,7 +55,7 @@ export function useCityDetails(cityId: string = '') {
 }
 
 export function useCitySearch(cityName: string = '') {
-  return useQuery<AxiosResponse<CitiesResponse>, Error, City[]>(
+  return useQuery<AxiosResponse<CitiesResponse>, AxiosError<CitiesAPIError>, City[]>(
     ['city', 'search', cityName],
     () =>
       axiosCitiesClient.get(`/v1/geo/cities`, {
@@ -65,7 +70,11 @@ export function useCitySearch(cityName: string = '') {
 }
 
 export function useFavouriteCitiesQuery() {
-  return useQuery<City[], Error>(['cities', 'favourite'], () => getFavouriteCities(), {
-    staleTime: Infinity,
-  });
+  return useQuery<City[], AxiosError<CitiesAPIError>>(
+    ['cities', 'favourite'],
+    () => getFavouriteCities(),
+    {
+      staleTime: Infinity,
+    }
+  );
 }

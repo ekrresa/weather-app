@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -10,6 +11,7 @@ import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { TemperatureProvider } from './common/temperatureContext';
 
 const ONE_DAY_IN_MILLISECONDS = 86_400_000;
 
@@ -35,11 +37,14 @@ ReactDOM.render(
     <Router>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <TemperatureProvider>
+            <App />
+          </TemperatureProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </HelmetProvider>
     </Router>
+    <Toaster />
   </React.StrictMode>,
   document.getElementById('root')
 );

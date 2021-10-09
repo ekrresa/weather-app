@@ -1,4 +1,4 @@
-import { useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { HiStar } from 'react-icons/hi';
 import { IoIosArrowBack, IoMdStarOutline } from 'react-icons/io';
 import { useQueryClient } from 'react-query';
@@ -12,6 +12,8 @@ import { useCityWeather } from '../hooks/api/weather';
 import { Notes } from '../components/Notes';
 import { Loader } from '../components/Loader';
 import { removeFavouriteCity, saveFavouriteCity } from '../helpers/cities';
+import { useTemperatureContext } from '../common/temperatureContext';
+import { convertFahrenheitToCelsius } from '../helpers';
 
 type QueryParams = {
   cityId: string | undefined;
@@ -24,6 +26,7 @@ type QueryParams = {
 export default function City() {
   const history = useHistory();
   const location = useLocation();
+  const temperatureCtx = useTemperatureContext();
 
   const queryParams = qs.parse(location.search, {
     parseBooleans: true,
@@ -34,14 +37,6 @@ export default function City() {
   const weatherDetails = useCityWeather({
     coords: queryParams.lat + ',' + queryParams.long,
   });
-
-  if (cityDetails.isLoading || weatherDetails.isLoading) {
-    return <Loader />;
-  }
-
-  if (cityDetails.isError || weatherDetails.isError) {
-    return <div>There was an error</div>;
-  }
 
   const toggleFavourite = async () => {
     if (cityDetails.data && !queryParams.isCurrentLocation) {
@@ -57,6 +52,49 @@ export default function City() {
       queryClient.invalidateQueries(['cities', 'favourite']);
     }
   };
+
+  if (Object.keys(queryParams).length < 4) {
+    return (
+      <StyledCity>
+        <Header />
+
+        <div className="errorWrapper">
+          <div>No city was selected</div>
+
+          <Link to="/" className="back_to_home">
+            Back to Home
+          </Link>
+        </div>
+      </StyledCity>
+    );
+  }
+
+  if (cityDetails.isLoading || weatherDetails.isLoading) {
+    return <Loader />;
+  }
+
+  if (cityDetails.isError || weatherDetails.isError) {
+    const cityErrorMessage =
+      cityDetails.error?.response?.data.errors[0].message || cityDetails.error?.message;
+
+    const weatherErrorMessage =
+      weatherDetails.error?.response?.data.error.info || weatherDetails.error?.message;
+
+    return (
+      <StyledCity>
+        <Header />
+
+        <div className="errorWrapper">
+          <div>{cityErrorMessage}</div>
+          <div style={{ marginTop: '0.5rem' }}>{weatherErrorMessage}</div>
+
+          <Link to="/" className="back_to_home">
+            Back to Home
+          </Link>
+        </div>
+      </StyledCity>
+    );
+  }
 
   return (
     <StyledCity>
@@ -83,17 +121,29 @@ export default function City() {
         <div className="showcase">
           <div className="showcase__left">
             <div className="temperature">
-              <span>{weatherDetails.data?.current.temperature}</span>
+              <span>
+                {temperatureCtx.unit === 'celsius'
+                  ? convertFahrenheitToCelsius(
+                      Number(weatherDetails.data?.current?.temperature)
+                    )
+                  : weatherDetails.data?.current?.temperature}
+              </span>
               <span className="temp__icon">&#186;</span>
-              <span>C</span>
+              <span>{temperatureCtx.unit === 'fahrenheit' ? 'F' : 'C'}</span>
             </div>
 
             <div className="feels__like">
               <span>Feels like</span>
               <div>
-                <span>{weatherDetails.data?.current.feelslike}</span>
+                <span>
+                  {temperatureCtx.unit === 'celsius'
+                    ? convertFahrenheitToCelsius(
+                        Number(weatherDetails.data?.current?.feelslike)
+                      )
+                    : weatherDetails.data?.current?.feelslike}
+                </span>
                 <span className="temp__icon">&#186;</span>
-                <span>C</span>
+                <span>{temperatureCtx.unit === 'fahrenheit' ? 'F' : 'C'}</span>
               </div>
             </div>
           </div>
@@ -129,17 +179,29 @@ export default function City() {
 
           <div className="metrics__left">Visibility</div>
           <div className="metrics__right">
-            {weatherDetails.data?.current.visibility}km
+            {new Intl.NumberFormat('en-US', {
+              style: 'unit',
+              unit: 'mile',
+              unitDisplay: 'long',
+            }).format(Number(weatherDetails.data?.current.visibility))}
           </div>
 
           <div className="metrics__left">Wind Speed</div>
           <div className="metrics__right">
-            {weatherDetails.data?.current.wind_speed}km/h
+            {new Intl.NumberFormat('en-US', {
+              style: 'unit',
+              unit: 'mile-per-hour',
+            }).format(Number(weatherDetails.data?.current.wind_speed))}
           </div>
 
           <div className="metrics__left">Cloud Cover</div>
           <div className="metrics__right">
             {weatherDetails.data?.current.cloudcover}&#37;
+          </div>
+
+          <div className="metrics__left">Population</div>
+          <div className="metrics__right">
+            {new Intl.NumberFormat('en-US').format(Number(cityDetails.data?.population))}
           </div>
         </section>
 
@@ -153,6 +215,21 @@ const StyledCity = styled.section`
   min-height: 100vh;
   position: relative;
 
+  .errorWrapper {
+    margin-top: 5rem;
+    text-align: center;
+    font-weight: 500;
+
+    .back_to_home {
+      cursor: pointer;
+      border: 1px solid #9e9ead;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+  }
+
   .header {
     display: flex;
     flex-direction: column;
@@ -164,6 +241,7 @@ const StyledCity = styled.section`
       font-size: 2.4rem;
       font-weight: 500;
       margin-bottom: 0.4rem;
+      text-align: center;
     }
     .back {
       display: flex;

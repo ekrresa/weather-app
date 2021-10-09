@@ -1,19 +1,28 @@
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useTemperatureContext } from '../common/temperatureContext';
 
 export function Header() {
+  const temperatureCtx = useTemperatureContext();
+
   return (
-    <StyledHeader>
+    <StyledHeader unit={temperatureCtx.unit}>
       <div className="container wrapper">
         <Link to="/" className="logo">
           WeatherView
         </Link>
         <div className="temperature">
-          <div className="celsius">
-            &#186;<span>C</span>
-          </div>
-          <div className="fahrenheit">
+          <div
+            className="fahrenheit"
+            onClick={() => temperatureCtx.handleUnitChange('fahrenheit')}
+          >
             &#186;<span>F</span>
+          </div>
+          <div
+            className="celsius"
+            onClick={() => temperatureCtx.handleUnitChange('celsius')}
+          >
+            &#186;<span>C</span>
           </div>
         </div>
       </div>
@@ -21,7 +30,7 @@ export function Header() {
   );
 }
 
-const StyledHeader = styled.header`
+const StyledHeader = styled.header<{ unit: 'celsius' | 'fahrenheit' }>`
   .wrapper {
     display: flex;
     align-items: center;
@@ -52,13 +61,27 @@ const StyledHeader = styled.header`
     }
 
     .celsius {
-      background: #e7e7eb;
+      background: #e2f3f5;
       color: #110e3c;
+      margin-left: 1rem;
+      ${props =>
+        props.unit === 'celsius'
+          ? css`
+              box-shadow: 0 0 0 3px #b179d4;
+            `
+          : null}
     }
     .fahrenheit {
       background: #585676;
       color: #e7e7eb;
-      margin-left: 1rem;
+      width: 29px;
+      height: 29px;
+      ${props =>
+        props.unit === 'fahrenheit'
+          ? css`
+              box-shadow: 0 0 0 3px #b0afbb;
+            `
+          : null}
     }
   }
 `;
