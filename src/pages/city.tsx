@@ -38,6 +38,37 @@ export default function City() {
     coords: queryParams.lat + ',' + queryParams.long,
   });
 
+  const toggleFavourite = async () => {
+    if (cityDetails.data && !queryParams.isCurrentLocation) {
+      if (queryParams.isFavourite) {
+        queryParams.isFavourite = false;
+        await removeFavouriteCity(Number(queryParams.cityId));
+      } else {
+        queryParams.isFavourite = true;
+        await saveFavouriteCity(cityDetails.data);
+      }
+
+      history.push(`${location.pathname}?${qs.stringify(queryParams)}`);
+      queryClient.invalidateQueries(['cities', 'favourite']);
+    }
+  };
+
+  if (Object.keys(queryParams).length < 4) {
+    return (
+      <StyledCity>
+        <Header />
+
+        <div className="errorWrapper">
+          <div>No city was selected</div>
+
+          <Link to="/" className="back_to_home">
+            Back to Home
+          </Link>
+        </div>
+      </StyledCity>
+    );
+  }
+
   if (cityDetails.isLoading || weatherDetails.isLoading) {
     return <Loader />;
   }
@@ -64,21 +95,6 @@ export default function City() {
       </StyledCity>
     );
   }
-
-  const toggleFavourite = async () => {
-    if (cityDetails.data && !queryParams.isCurrentLocation) {
-      if (queryParams.isFavourite) {
-        queryParams.isFavourite = false;
-        await removeFavouriteCity(Number(queryParams.cityId));
-      } else {
-        queryParams.isFavourite = true;
-        await saveFavouriteCity(cityDetails.data);
-      }
-
-      history.push(`${location.pathname}?${qs.stringify(queryParams)}`);
-      queryClient.invalidateQueries(['cities', 'favourite']);
-    }
-  };
 
   return (
     <StyledCity>
