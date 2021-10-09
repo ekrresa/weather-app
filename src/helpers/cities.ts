@@ -21,8 +21,8 @@ export async function saveFavouriteCity(favCity: City) {
   const favCitiesFromStorage =
     (await localforage.getItem<City[]>(FAVOURITE_CITIES_KEY)) ?? [];
 
-  const updatedFavCities = [...favCitiesFromStorage, favCity].sort((a, b) =>
-    a.city < b.city ? -1 : 1
+  const updatedFavCities = [...favCitiesFromStorage, favCity].sort((cityA, cityB) =>
+    cityA.city < cityB.city ? -1 : 1
   );
 
   await localforage.setItem(FAVOURITE_CITIES_KEY, updatedFavCities);

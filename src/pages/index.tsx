@@ -50,11 +50,13 @@ export default function Home() {
     (async function () {
       if (cities.data && favouriteCities.data) {
         const str = extractCoordinates(cities.data.data);
-        const sortedCities = cities.data.data.sort((a, b) => (a.city < b.city ? -1 : 1));
+        const sortedCities = cities.data.data.sort((cityA, cityB) =>
+          cityA.city < cityB.city ? -1 : 1
+        );
         const notFavouriteCities = arrayDiff(
           sortedCities,
           favouriteCities.data,
-          (a, b) => a.id === b.id
+          (cityA, cityB) => cityA.id === cityB.id
         );
 
         const deletedCities = await getDeletedCities();
@@ -63,7 +65,7 @@ export default function Home() {
           const notDeletedCities = arrayDiff(
             notFavouriteCities,
             deletedCities,
-            (a, b) => a.id === b.id
+            (cityA, cityB) => cityA.id === cityB.id
           );
 
           setSortedCities(notDeletedCities);
@@ -133,7 +135,9 @@ export default function Home() {
 
     if (removedCity) {
       setSortedCities(
-        [...sortedCities, removedCity].sort((a, b) => (a.city < b.city ? -1 : 1))
+        [...sortedCities, removedCity].sort((cityA, cityB) =>
+          cityA.city < cityB.city ? -1 : 1
+        )
       );
     }
 
