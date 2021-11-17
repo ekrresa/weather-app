@@ -11,6 +11,7 @@
 7. You can toggle between celsius and fahrenheit temperature values.
 8. You can search for cities and add them as favourites in their details page.
 9. The app can get a user's current location (with permission of course) and display details of the city.
+10. The App works offline using IndexDB as storage.
 
 ## What the App cannot do
 
