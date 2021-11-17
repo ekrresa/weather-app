@@ -67,7 +67,7 @@ export function ComboBox({
                 key={city.id}
                 {...getItemProps({ item: city, index })}
               >
-                {city.name}
+                {city.city}, {city.country}
               </ListItem>
             ))
           ) : (
